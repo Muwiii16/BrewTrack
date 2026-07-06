@@ -14,11 +14,10 @@ def nav_item(text, selected=False):
 
 def build_sidebar(page: ft.Page):
     logo_block = ft.Column([
-        ft.Text('BUT FIRST, COFFEE', size=11,
-                color=ACCENT_GOLD, weight=ft.FontWeight.BOLD),
+        ft.Image(src='assets/BFC_logo.jpg', width=140, fit=ft.BoxFit.CONTAIN),
         ft.Text('BrewTrack', size=22, color=TEXT_PRIMARY,
                 weight=ft.FontWeight.BOLD),
-    ], spacing=2,)
+    ], spacing=6,)
 
     nav_column = ft.Column([
         nav_section_label("Overview"),
@@ -46,7 +45,7 @@ def build_sidebar(page: ft.Page):
         ft.Container(height=12),
         nav_section_label("Insights"),
         nav_item("Reports"),
-    ], spacing=10, expand=True,)
+    ], spacing=10, scroll=ft.ScrollMode.AUTO, expand=True,)
 
     profile_block = ft.Row([
         ft.Icon(ft.Icons.ACCOUNT_CIRCLE_ROUNDED,
