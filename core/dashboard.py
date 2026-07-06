@@ -245,6 +245,60 @@ def build_movements_card():
     )
 
 
+def po_block(po_number, amount, status_text, status_color, text_color="#000000"):
+    return ft.Column(
+        [
+            ft.Text(po_number, size=13, color=TEXT_PRIMARY,
+                    weight=ft.FontWeight.BOLD),
+            ft.Text(amount, size=11, color=TEXT_SECONDARY),
+            badge(status_text, status_color, text_color),
+        ],
+        spacing=4,
+    )
+
+
+purchase_orders_data = [
+    {"po": "PO-1008", "amount": "P 1,548.00", "status": "Pending"},
+    {"po": "PO-1009", "amount": "P 612.00", "status": "Pending"},
+    {"po": "PO-1010", "amount": "P 2,500.00", "status": "Approved"},
+]
+
+
+def build_purchase_orders_bar():
+    po_blocks = [
+        po_block(
+            item["po"],
+            item["amount"],
+            item["status"],
+            STATUS_COLORS[item["status"].lower()],
+            "#ffffff" if item["status"].lower() == "approved" else "#000000",
+        )
+        for item in purchase_orders_data
+    ]
+
+    return ft.Container(
+        content=ft.Row(
+            [
+                ft.Text("Purchase Orders", size=16,
+                        color=TEXT_PRIMARY, weight=ft.FontWeight.BOLD),
+                *po_blocks,
+                ft.Row(
+                    [
+                        ft.Text("View all", size=12, color=TEXT_SECONDARY),
+                        ft.Icon(ft.Icons.ARROW_FORWARD_ROUNDED,
+                                size=14, color=TEXT_SECONDARY),
+                    ],
+                    spacing=4,
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+        ),
+        border=ft.Border.all(1, BORDER_COLOR),
+        border_radius=6,
+        padding=16,
+    )
+
 
 def dashboard_view(page: ft.Page):
     sidebar = build_sidebar(page)
@@ -253,6 +307,7 @@ def dashboard_view(page: ft.Page):
     stats_row = build_stats_row()
     low_stock_card = build_low_stock_card()
     movements_card = build_movements_card()
+    po_bar = build_purchase_orders_bar()
 
     cards_row = ft.Row(
         [low_stock_card, movements_card],
@@ -261,7 +316,7 @@ def dashboard_view(page: ft.Page):
 
     main_content = ft.Container(
         content=ft.Column([
-            header, stats_row, cards_row], spacing=20,),
+            header, stats_row, cards_row, po_bar], spacing=20, scroll=ft.ScrollMode.AUTO,),
         expand=True,
         padding=24,
     )
