@@ -134,25 +134,134 @@ STATUS_COLORS = {
 }
 
 
+def stock_list_row(name, info, status_text, status_color, text_color='#000000'):
+    return ft.Container(
+        content=ft.Row([
+            ft.Column([
+                ft.Text(name, size=14, color=TEXT_PRIMARY,
+                        weight=ft.FontWeight.BOLD),
+                ft.Text(info, size=11, color=TEXT_SECONDARY),
+            ], spacing=2),
+            badge(status_text, status_color, text_color),
+        ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN,),
+        border=ft.Border.all(1, BORDER_COLOR),
+        border_radius=6,
+        padding=12,
+    )
+
+
+def panel_header(title):
+    return ft.Row([
+        ft.Text(title, size=16, color=TEXT_PRIMARY, weight=ft.FontWeight.BOLD),
+        ft.Row([
+            ft.Text('View All', size=12, color=TEXT_SECONDARY),
+            ft.Icon(ft.Icons.ARROW_FORWARD_ROUNDED,
+                    size=14, color=TEXT_SECONDARY),
+        ], spacing=4, )
+    ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN,)
+
+
+low_stock_data = [
+    {"name": "Coffee Bean", "info": "145 kg on hand • reorder at 150", "status": "Low"},
+    {"name": "Matcha Powder", "info": "120 g on hand • reorder at 150", "status": "Low"},
+    {"name": "Oatmilk", "info": "1 L on hand • reorder at 3", "status": "Low"},
+    {"name": "Vanilla Syrup", "info": "2 L on hand • reorder at 5", "status": "Low"},
+]
+
+
+def build_low_stock_card():
+    rows = [
+        stock_list_row(item["name"], item["info"],
+                       item["status"], STATUS_COLORS["low"])
+        for item in low_stock_data
+    ]
+
+    return ft.Container(
+        content=ft.Column(
+            [panel_header("Low-Stock Alerts")] + rows,
+            spacing=10,
+        ),
+        border=ft.Border.all(1, BORDER_COLOR),
+        border_radius=6,
+        padding=16,
+        expand=True,
+    )
+
+
+def movement_list_row(tag_text, tag_color, title, subtitle, amount_text, amount_color):
+    return ft.Container(
+        content=ft.Row([
+            badge(tag_text, tag_color, '#ffffff'),
+            ft.Column([
+                ft.Text(title, size=14, color=TEXT_PRIMARY,
+                        weight=ft.FontWeight.BOLD),
+                ft.Text(subtitle, size=11, color=TEXT_SECONDARY),
+            ],
+                spacing=2,
+                expand=True,),
+            ft.Text(amount_text, size=13, color=amount_color,
+                    weight=ft.FontWeight.BOLD),
+        ], spacing=12),
+        border=ft.Border.all(1, BORDER_COLOR),
+        border_radius=6,
+        padding=12,
+    )
+
+
+movements_data = [
+    {"tag": "Stock-In", "title": "Coffee Bean • PO...",
+        "subtitle": "Marco Reyes | Jun 30, 12:22 AM", "amount": "+1000 units", "color": STATUS_GREEN},
+    {"tag": "Stock-Out", "title": "Matcha Powder • Ba...",
+        "subtitle": "Marco Reyes | Jul 12, 12:22 AM", "amount": "- 220 g", "color": STATUS_LOW},
+    {"tag": "Sale", "title": "Oatmilk • Restock from...",
+        "subtitle": "Jose Santos | Aug 14, 12:22 AM", "amount": "- 3 cases", "color": STATUS_RED},
+    {"tag": "Stock-Out", "title": "Vanilla Syrup • Restock...",
+        "subtitle": "Kim Chua | Sep 1, 12:22 AM", "amount": "+ 6 bottles", "color": STATUS_GREEN},
+]
+
+
+def build_movements_card():
+    rows = [
+        movement_list_row(
+            item["tag"],
+            STATUS_COLORS[item["tag"].lower()],
+            item["title"],
+            item["subtitle"],
+            item["amount"],
+            item["color"],
+        )
+        for item in movements_data
+    ]
+
+    return ft.Container(
+        content=ft.Column(
+            [panel_header("Recent Stock Movements")] + rows,
+            spacing=10,
+        ),
+        border=ft.Border.all(1, BORDER_COLOR),
+        border_radius=6,
+        padding=16,
+        expand=True,
+    )
+
+
+
 def dashboard_view(page: ft.Page):
     sidebar = build_sidebar(page)
 
     header = build_header('Juan')
     stats_row = build_stats_row()
+    low_stock_card = build_low_stock_card()
+    movements_card = build_movements_card()
 
-    test_badges = ft.Row(
-        [
-            badge("Low", STATUS_COLORS["low"]),
-            badge("Approved", STATUS_COLORS["approved"], text_color="#ffffff"),
-            badge("Stock-Out",
-                  STATUS_COLORS["stock-out"], text_color="#ffffff"),
-        ],
-        spacing=8,
+    cards_row = ft.Row(
+        [low_stock_card, movements_card],
+        spacing=16,
     )
 
     main_content = ft.Container(
         content=ft.Column([
-            header, stats_row, test_badges], spacing=20,),
+            header, stats_row, cards_row], spacing=20,),
         expand=True,
         padding=24,
     )
