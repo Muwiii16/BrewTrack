@@ -26,8 +26,8 @@ def build_sidebar(page: ft.Page):
         ft.Container(height=12),  # spacer
         nav_section_label("Master Records"),
         nav_item("User Management"),
-        nav_item("Suppliers", selected=True),
-        nav_item("Ingredients & Supplies"),
+        nav_item("Suppliers"),
+        nav_item("Ingredients & Supplies", selected=True),
 
         ft.Container(height=12),
         nav_section_label("Operations"),
@@ -70,7 +70,7 @@ def build_sidebar(page: ft.Page):
     )
 
 
-def build_header():
+def build_header(open_add_item_overlay):
     breadcrumb = ft.Row([
         ft.Icon(ft.Icons.GRID_VIEW_ROUNDED, size=18, color=TEXT_SECONDARY),
         ft.Text("Ingredients & Supplies", size=14, color=TEXT_SECONDARY),
@@ -80,21 +80,22 @@ def build_header():
                      weight=ft.FontWeight.BOLD)
 
     subtitle = ft.Text(
-        "Master catalog of raw materials, packaging, and supplies.", size=13, color=TEXT_SECONDARY)
+        "Master catalog of raw materials, packaging, and supplies", size=13, color=TEXT_SECONDARY)
 
-    add_supplier_btn = ft.ElevatedButton(
+    add_item_btn = ft.ElevatedButton(
         content=ft.Text("Add Item", size=13, weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY),
         bgcolor=ACCENT_GOLD,
         style=ft.ButtonStyle(
             shape=ft.RoundedRectangleBorder(radius=6),
             padding=ft.Padding.symmetric(horizontal=18, vertical=18),
         ),
+        on_click=open_add_item_overlay,
     )
 
     title_row = ft.Row(
         [
             ft.Column([title, subtitle], spacing=6),
-            add_supplier_btn,
+            add_item_btn,
         ],
         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
         vertical_alignment=ft.CrossAxisAlignment.START,
@@ -117,10 +118,124 @@ def badge(text, bg_color, text_color='#000000'):
 
 
 STATUS_COLORS = {
-    "low stock": (STATUS_LOW, "#ffffff"),
+    "low stock": (STATUS_LOW, "#000000"),
     "in stock": (STATUS_GREEN, "#ffffff"),
     "out of stock": (STATUS_RED, "#ffffff"),
 }
+
+
+def field_label(text):
+    return ft.Text(text, size=13, color=TEXT_PRIMARY, weight=ft.FontWeight.BOLD)
+
+
+def dialog_field(hint=""):
+    return ft.TextField(
+        hint_text=hint,
+        bgcolor=CARD_COLOR,
+        border_color=BORDER_COLOR,
+        focused_border_color=ACCENT_GOLD,
+        color=TEXT_PRIMARY,
+        hint_style=ft.TextStyle(color=TEXT_SECONDARY, size=13),
+        text_size=13,
+        border_radius=6,
+        content_padding=ft.Padding.symmetric(horizontal=12, vertical=10),
+    )
+
+
+def build_add_item_dialog(page: ft.Page):
+    item_name_field = dialog_field("e.g. Coffee Beans")
+    reorder_at_field = dialog_field("e.g. 150 kg")
+    unit_field = dialog_field("e.g. kilogram (kg)")
+    unit_cost_field = dialog_field("e.g. P 100.00")
+
+    category_dropdown = ft.Dropdown(
+        hint_text="Select a category",
+        options=[
+            ft.dropdown.Option("Coffee"),
+            ft.dropdown.Option("Dairy"),
+            ft.dropdown.Option("Syrup"),
+            ft.dropdown.Option("Packaging"),
+        ],
+        bgcolor=CARD_COLOR,
+        border_color=BORDER_COLOR,
+        focused_border_color=ACCENT_GOLD,
+        color=TEXT_PRIMARY,
+        text_size=13,
+        border_radius=6,
+        content_padding=ft.Padding.symmetric(horizontal=12, vertical=10),
+    )
+
+    def close_dialog(e=None):
+        dialog.open = False
+        page.update()
+
+    def create_item(e=None):
+        # TODO: wire this up to real item-creation logic (validation, saving, refreshing the table).
+        close_dialog()
+
+    cancel_btn = ft.OutlinedButton(
+        content=ft.Text("Cancel", size=13, weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY),
+        style=ft.ButtonStyle(
+            shape=ft.RoundedRectangleBorder(radius=6),
+            side=ft.BorderSide(1, BORDER_COLOR),
+            padding=ft.Padding.symmetric(horizontal=18, vertical=18),
+        ),
+        on_click=close_dialog,
+    )
+
+    create_btn = ft.ElevatedButton(
+        content=ft.Text("Create Item", size=13, weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY),
+        bgcolor=ACCENT_GOLD,
+        style=ft.ButtonStyle(
+            shape=ft.RoundedRectangleBorder(radius=6),
+            padding=ft.Padding.symmetric(horizontal=18, vertical=18),
+        ),
+        on_click=create_item,
+    )
+
+    dialog = ft.AlertDialog(
+        modal=True,
+        bgcolor=SIDEBAR_COLOR,
+        shape=ft.RoundedRectangleBorder(radius=10),
+        content=ft.Container(
+            width=560,
+            content=ft.Column(
+                [
+                    ft.Text("Add Item", size=22, color=TEXT_PRIMARY, weight=ft.FontWeight.BOLD),
+                    ft.Text("Define catalog details and reorder thresholds.",
+                            size=13, color=TEXT_SECONDARY),
+                    ft.Container(height=14),
+                    field_label("Item Name"),
+                    item_name_field,
+                    ft.Container(height=14),
+                    ft.Row(
+                        [
+                            ft.Column([field_label("Category"), category_dropdown], spacing=6, expand=True),
+                            ft.Column([field_label("Reorder At"), reorder_at_field], spacing=6, expand=True),
+                        ],
+                        spacing=16,
+                    ),
+                    ft.Container(height=14),
+                    ft.Row(
+                        [
+                            ft.Column([field_label("Unit"), unit_field], spacing=6, expand=True),
+                            ft.Column([field_label("Unit Cost"), unit_cost_field], spacing=6, expand=True),
+                        ],
+                        spacing=16,
+                    ),
+                ],
+                spacing=6,
+                tight=True,
+            ),
+            padding=28,
+        ),
+        actions=[cancel_btn, create_btn],
+        actions_alignment=ft.MainAxisAlignment.END,
+        actions_padding=ft.Padding.only(left=28, right=28, bottom=24, top=0),
+        content_padding=0,
+    )
+
+    return dialog
 
 
 def build_search_bar():
@@ -170,7 +285,7 @@ def table_header_row():
 
 
 def ingredient_supply_row(pid, sid, item, category, unit, cost, reorder_at, status):
-    status_bg, status_text = STATUS_COLORS.get(status.lower(), (STATUS_GREEN, "#ffffff"))
+    status_bg, status_text = STATUS_COLORS.get(status.lower(), (STATUS_LOW, "#000000"))
 
     def cell(text, width, color=TEXT_SECONDARY, bold=False):
         return ft.Container(
@@ -185,13 +300,13 @@ def ingredient_supply_row(pid, sid, item, category, unit, cost, reorder_at, stat
     return ft.Container(
         content=ft.Row([
             cell(pid, 70, color=TEXT_PRIMARY, bold=True),
-            cell(sid, 70, color=TEXT_PRIMARY, bold=True),
-            cell(item, 130),
+            cell(sid, 70),
+            cell(item, 130, color=TEXT_PRIMARY, bold=True),
             cell(category, 110),
             cell(unit, 110),
             cell(cost, 90),
             cell(reorder_at, 110),
-            ft.Container(badge(status, status_bg, status_text), width=100, alignment=ft.alignment.Alignment(-1, 0)),
+            ft.Container(badge(status, status_bg, status_text), width=110, alignment=ft.alignment.Alignment(-1, 0)),
             ft.Container(
                 ft.Row([
                     ft.IconButton(
@@ -215,7 +330,7 @@ def ingredient_supply_row(pid, sid, item, category, unit, cost, reorder_at, stat
     )
 
 
-ingredient_supply_data = [
+ingredients_supply_data = [
     {"pid": "P0001", "sid": "S0002", "item": "Coffee Beans", "category": "Coffee",
         "unit": "kilogram (kg)", "cost": "P 100.00", "reorder_at": "150 kg", "status": "Low Stock"},
     {"pid": "P0002", "sid": "S0001", "item": "Matcha Powder", "category": "Coffee",
@@ -229,9 +344,9 @@ ingredient_supply_data = [
 
 def build_ingredients_supply_table():
     rows = [table_header_row()] + [
-        ingredient_supply_row(item["pid"], item["sid"], item["item"], item["category"], item["unit"],
-                     item["cost"], item["reorder_at"], item["status"])
-        for item in ingredient_supply_data
+        ingredient_supply_row(item["pid"], item["sid"], item["item"], item["category"],
+                        item["unit"], item["cost"], item["reorder_at"], item["status"])
+        for item in ingredients_supply_data
     ]
 
     return ft.Container(
@@ -244,13 +359,21 @@ def build_ingredients_supply_table():
 def ingredients_supply_view(page: ft.Page):
     sidebar = build_sidebar(page)
 
-    header = build_header()
+    add_item_dialog = build_add_item_dialog(page)
+    page.overlay.clear()
+    page.overlay.append(add_item_dialog)
+
+    def open_add_item_dialog(e=None):
+        add_item_dialog.open = True
+        page.update()
+
+    header = build_header(open_add_item_dialog)
     search_bar = build_search_bar()
-    ingredients_supply_table = build_ingredients_supply_table()
+    ingredients_table = build_ingredients_supply_table()
 
     main_content = ft.Container(
         content=ft.Column([
-            header, search_bar, ingredients_supply_table], spacing=20, scroll=ft.ScrollMode.AUTO,),
+            header, search_bar, ingredients_table], spacing=20, scroll=ft.ScrollMode.AUTO,),
         expand=True,
         padding=24,
     )
