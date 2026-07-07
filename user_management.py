@@ -70,7 +70,7 @@ def build_sidebar(page: ft.Page):
     )
 
 
-def build_header():
+def build_header(open_add_user_dialog):
     breadcrumb = ft.Row([
         ft.Icon(ft.Icons.GRID_VIEW_ROUNDED, size=18, color=TEXT_SECONDARY),
         ft.Text("User Management", size=14, color=TEXT_SECONDARY),
@@ -89,6 +89,7 @@ def build_header():
             shape=ft.RoundedRectangleBorder(radius=6),
             padding=ft.Padding.symmetric(horizontal=18, vertical=18),
         ),
+        on_click=open_add_user_dialog,
     )
 
     title_row = ft.Row(
@@ -120,6 +121,111 @@ ROLE_COLORS = {
     "owner/ admin": (ACCENT_GOLD, "#000000"),
     "staff": (STATUS_TEAL, "#ffffff"),
 }
+
+
+def field_label(text):
+    return ft.Text(text, size=13, color=TEXT_PRIMARY, weight=ft.FontWeight.BOLD)
+
+
+def dialog_field(hint=""):
+    return ft.TextField(
+        hint_text=hint,
+        bgcolor=CARD_COLOR,
+        border_color=BORDER_COLOR,
+        focused_border_color=ACCENT_GOLD,
+        color=TEXT_PRIMARY,
+        hint_style=ft.TextStyle(color=TEXT_SECONDARY, size=13),
+        text_size=13,
+        border_radius=6,
+        content_padding=ft.Padding.symmetric(horizontal=12, vertical=10),
+    )
+
+
+def build_add_user_dialog(page: ft.Page):
+    full_name_field = dialog_field("e.g. Dana Whitfield")
+    contact_field = dialog_field("e.g. (555) 123-4567")
+    email_field = dialog_field("name@brewtrack.com")
+
+    role_dropdown = ft.Dropdown(
+        hint_text="Select a role",
+        options=[
+            ft.dropdown.Option("Staff"),
+            ft.dropdown.Option("Owner/ Admin"),
+        ],
+        bgcolor=CARD_COLOR,
+        border_color=BORDER_COLOR,
+        focused_border_color=ACCENT_GOLD,
+        color=TEXT_PRIMARY,
+        text_size=13,
+        border_radius=6,
+        content_padding=ft.Padding.symmetric(horizontal=12, vertical=10),
+    )
+
+    def close_dialog(e=None):
+        dialog.open = False
+        page.update()
+
+    def create_user(e=None):
+        # TODO: wire this up to real user-creation logic (validation, saving, refreshing the table).
+        close_dialog()
+
+    cancel_btn = ft.OutlinedButton(
+        content=ft.Text("Cancel", size=13, weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY),
+        style=ft.ButtonStyle(
+            shape=ft.RoundedRectangleBorder(radius=6),
+            side=ft.BorderSide(1, BORDER_COLOR),
+            padding=ft.Padding.symmetric(horizontal=18, vertical=18),
+        ),
+        on_click=close_dialog,
+    )
+
+    create_btn = ft.ElevatedButton(
+        content=ft.Text("Create User", size=13, weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY),
+        bgcolor=ACCENT_GOLD,
+        style=ft.ButtonStyle(
+            shape=ft.RoundedRectangleBorder(radius=6),
+            padding=ft.Padding.symmetric(horizontal=18, vertical=18),
+        ),
+        on_click=create_user,
+    )
+
+    dialog = ft.AlertDialog(
+        modal=True,
+        bgcolor=SIDEBAR_COLOR,
+        shape=ft.RoundedRectangleBorder(radius=10),
+        content=ft.Container(
+            width=520,
+            content=ft.Column(
+                [
+                    ft.Text("Add User", size=22, color=TEXT_PRIMARY, weight=ft.FontWeight.BOLD),
+                    ft.Text("Create a new staff or admin account.", size=13, color=TEXT_SECONDARY),
+                    ft.Container(height=14),
+                    field_label("Full Name"),
+                    full_name_field,
+                    ft.Container(height=14),
+                    ft.Row(
+                        [
+                            ft.Column([field_label("Contact Number"), contact_field], spacing=6, expand=True),
+                            ft.Column([field_label("Email"), email_field], spacing=6, expand=True),
+                        ],
+                        spacing=16,
+                    ),
+                    ft.Container(height=14),
+                    field_label("Role"),
+                    role_dropdown,
+                ],
+                spacing=6,
+                tight=True,
+            ),
+            padding=28,
+        ),
+        actions=[cancel_btn, create_btn],
+        actions_alignment=ft.MainAxisAlignment.END,
+        actions_padding=ft.Padding.only(left=28, right=28, bottom=24, top=0),
+        content_padding=0,
+    )
+
+    return dialog
 
 
 def build_search_bar():
@@ -226,7 +332,15 @@ def build_users_table():
 def user_management_view(page: ft.Page):
     sidebar = build_sidebar(page)
 
-    header = build_header()
+    add_user_dialog = build_add_user_dialog(page)
+    page.overlay.clear()
+    page.overlay.append(add_user_dialog)
+
+    def open_add_user_dialog(e=None):
+        add_user_dialog.open = True
+        page.update()
+
+    header = build_header(open_add_user_dialog)
     search_bar = build_search_bar()
     users_table = build_users_table()
 
