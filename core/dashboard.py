@@ -1,5 +1,11 @@
 import flet as ft
 from core.theme import *
+from models import ingredient_model
+from models import inventory_model
+from models import purchase_order_model
+from models import sales_model
+from models import stock_movement_model
+#initialize the dashboard view
 
 
 def nav_section_label(text):
@@ -12,7 +18,7 @@ def nav_item(text, selected=False):
     return ft.Text(text, size=13, color=TEXT_PRIMARY if selected else TEXT_SECONDARY, weight=ft.FontWeight.NORMAL,)
 
 
-def build_sidebar(page: ft.Page):
+def build_sidebar(page: ft.Page, user, on_logout):
     logo_block = ft.Column([
         ft.Image(src='assets/BFC_logo.jpg', width=140, fit=ft.BoxFit.CONTAIN),
         ft.Text('BrewTrack', size=22, color=TEXT_PRIMARY,
@@ -51,10 +57,13 @@ def build_sidebar(page: ft.Page):
         ft.Icon(ft.Icons.ACCOUNT_CIRCLE_ROUNDED,
                 size=36, color=TEXT_SECONDARY),
         ft.Column([
-            ft.Text("John Doe", size=13, color=TEXT_PRIMARY,
+            ft.Text(user["full_name"], size=13, color=TEXT_PRIMARY,
                     weight=ft.FontWeight.BOLD),
-            ft.Text("Admin", size=11, color=TEXT_SECONDARY),
-        ], spacing=0)
+            ft.Text(user["role"], size=11, color=TEXT_SECONDARY),
+        ], spacing=0),
+        ft.Container(expand=True),  # spacer
+        ft.IconButton(ft.Icons.LOGOUT_ROUNDED, icon_color=ACCENT_GOLD, 
+                on_click=lambda e: on_logout(), alignment=ft.Alignment.CENTER_RIGHT),
     ], spacing=8,)
 
     return ft.Container(
@@ -68,9 +77,9 @@ def build_sidebar(page: ft.Page):
         bgcolor=SIDEBAR_COLOR,
         padding=20,
     )
+    
 
-
-def build_header(user_name="Juan"):
+def build_header(user_name):
     breadcrumb = ft.Row([
         ft.Icon(ft.Icons.GRID_VIEW_ROUNDED, size=18, color=TEXT_SECONDARY),
         ft.Text("Dashboard", size=14, color=TEXT_PRIMARY),
@@ -105,11 +114,16 @@ def stat_card(label, value, caption):
 
 
 def build_stats_row():
+    """Each number comes from the model file that owns that table."""
+    total_ingredients = ingredient_model.get_total_ingredients()
+    low_stock = inventory_model.get_low_stock_count()
+    pending_orders = purchase_order_model.get_pending_orders_count()
+    daily_sales = sales_model.get_daily_sales_total()
     return ft.Row([
-        stat_card("Total Ingredients", "1,234", "As of today"),
-        stat_card("Low Stock Items", "56", "Needs attention"),
-        stat_card("Pending Orders", "12", "Awaiting approval"),
-        stat_card("Daily Sales", "₱4,567", "Today so far"),
+        stat_card("Total Ingredients", f"{total_ingredients:,}", "As of today"),
+        stat_card("Low Stock Items", str(low_stock), "Needs attention"),
+        stat_card("Pending Orders", str(pending_orders), "Awaiting approval"),
+        stat_card("Daily Sales", f"₱{daily_sales:,.2f}", "Today so far")
     ], spacing=16,)
 
 
@@ -159,22 +173,30 @@ def panel_header(title):
         ], spacing=4, )
     ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN,)
 
-
-low_stock_data = [
-    {"name": "Coffee Bean", "info": "145 kg on hand • reorder at 150", "status": "Low"},
-    {"name": "Matcha Powder", "info": "120 g on hand • reorder at 150", "status": "Low"},
-    {"name": "Oatmilk", "info": "1 L on hand • reorder at 3", "status": "Low"},
-    {"name": "Vanilla Syrup", "info": "2 L on hand • reorder at 5", "status": "Low"},
-]
+def _qty_fmt(v, uom=""):
+    try:
+        v = float(v)
+        if v == int(v):
+            v = int(v)
+        return f"{v} {uom}".strip()
+    except (TypeError, ValueError):
+        return f"{v} {uom}".strip()
 
 
 def build_low_stock_card():
+    """Replaces the old low_stock_data list with a live query."""
+    items = inventory_model.get_low_stock_items(limit=4)
     rows = [
-        stock_list_row(item["name"], item["info"],
-                       item["status"], STATUS_COLORS["low"])
-        for item in low_stock_data
-    ]
-
+        stock_list_row(
+            item["item_name"],
+            f"{_qty_fmt(item['current_quantity'], item['unit_of_measurement'])} on hand • "
+            f"reorder at {_qty_fmt(item['reorder_level'])}",
+            "Low",
+            STATUS_COLORS["low"],
+        )
+        for item in items
+    ] or [ft.Text("No low-stock items right now.", size=12, color=TEXT_SECONDARY)]
+ 
     return ft.Container(
         content=ft.Column(
             [panel_header("Low-Stock Alerts")] + rows,
@@ -207,31 +229,29 @@ def movement_list_row(tag_text, tag_color, title, subtitle, amount_text, amount_
     )
 
 
-movements_data = [
-    {"tag": "Stock-In", "title": "Coffee Bean • PO...",
-        "subtitle": "Marco Reyes | Jun 30, 12:22 AM", "amount": "+1000 units", "color": STATUS_GREEN},
-    {"tag": "Stock-Out", "title": "Matcha Powder • Ba...",
-        "subtitle": "Marco Reyes | Jul 12, 12:22 AM", "amount": "- 220 g", "color": STATUS_LOW},
-    {"tag": "Sale", "title": "Oatmilk • Restock from...",
-        "subtitle": "Jose Santos | Aug 14, 12:22 AM", "amount": "- 3 cases", "color": STATUS_RED},
-    {"tag": "Stock-Out", "title": "Vanilla Syrup • Restock...",
-        "subtitle": "Kim Chua | Sep 1, 12:22 AM", "amount": "+ 6 bottles", "color": STATUS_GREEN},
-]
-
 
 def build_movements_card():
-    rows = [
-        movement_list_row(
-            item["tag"],
-            STATUS_COLORS[item["tag"].lower()],
-            item["title"],
-            item["subtitle"],
-            item["amount"],
-            item["color"],
+    """Replaces the old movements_data list with a live query."""
+    movements = stock_movement_model.get_recent_movements(limit=4)
+    rows = []
+    for m in movements:
+        tag = m["movement_type"]  # 'Stock-In' / 'Stock-Out' (Sale is logged via reference_type, not shown here)
+        qty = m["quantity"]
+        amount_color = STATUS_GREEN if qty >= 0 else STATUS_RED
+        amount_text = f"{'+' if qty >= 0 else ''}{_qty_fmt(qty)}"
+        rows.append(
+            movement_list_row(
+                tag,
+                STATUS_COLORS.get(tag.lower(), STATUS_LOW),
+                m["item_name"],
+                f"{m['full_name']} | {m['movement_date']:%b %d, %I:%M %p}",
+                amount_text,
+                amount_color,
+            )
         )
-        for item in movements_data
-    ]
-
+    if not rows:
+        rows = [ft.Text("No stock movements yet.", size=12, color=TEXT_SECONDARY)]
+ 
     return ft.Container(
         content=ft.Column(
             [panel_header("Recent Stock Movements")] + rows,
@@ -256,23 +276,18 @@ def po_block(po_number, amount, status_text, status_color, text_color="#000000")
     )
 
 
-purchase_orders_data = [
-    {"po": "PO-1008", "amount": "P 1,548.00", "status": "Pending"},
-    {"po": "PO-1009", "amount": "P 612.00", "status": "Pending"},
-    {"po": "PO-1010", "amount": "P 2,500.00", "status": "Approved"},
-]
-
-
 def build_purchase_orders_bar():
+    """Replaces the old purchase_orders_data list with a live query."""
+    pos = purchase_order_model.get_recent_purchase_orders(limit=3)
     po_blocks = [
         po_block(
-            item["po"],
-            item["amount"],
-            item["status"],
-            STATUS_COLORS[item["status"].lower()],
-            "#ffffff" if item["status"].lower() == "approved" else "#000000",
+            f"PO-{1000 + item['po_id']}",
+            f"P {float(item['total']):,.2f}",
+            item["po_status"],
+            STATUS_COLORS.get(item["po_status"].lower(), STATUS_LOW),
+            "#ffffff" if item["po_status"].lower() == "approved" else "#000000",
         )
-        for item in purchase_orders_data
+        for item in pos
     ]
 
     return ft.Container(
@@ -299,10 +314,10 @@ def build_purchase_orders_bar():
     )
 
 
-def dashboard_view(page: ft.Page):
-    sidebar = build_sidebar(page)
+def dashboard_view(page: ft.Page, user, on_logout=None):
+    sidebar = build_sidebar(page, user, on_logout)
 
-    header = build_header('Juan')
+    header = build_header(user["full_name"])
     stats_row = build_stats_row()
     low_stock_card = build_low_stock_card()
     movements_card = build_movements_card()
