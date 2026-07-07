@@ -70,7 +70,7 @@ def build_sidebar(page: ft.Page):
     )
 
 
-def build_header():
+def build_header(open_add_supplier_overlay):
     breadcrumb = ft.Row([
         ft.Icon(ft.Icons.GRID_VIEW_ROUNDED, size=18, color=TEXT_SECONDARY),
         ft.Text("Supplier Management", size=14, color=TEXT_SECONDARY),
@@ -89,6 +89,7 @@ def build_header():
             shape=ft.RoundedRectangleBorder(radius=6),
             padding=ft.Padding.symmetric(horizontal=18, vertical=18),
         ),
+        on_click=open_add_supplier_overlay,
     )
 
     title_row = ft.Row(
@@ -120,6 +121,102 @@ STATUS_COLORS = {
     "active": (STATUS_GREEN, "#ffffff"),
     "inactive": (STATUS_RED, "#ffffff"),
 }
+
+
+def field_label(text):
+    return ft.Text(text, size=13, color=TEXT_PRIMARY, weight=ft.FontWeight.BOLD)
+
+
+def dialog_field(hint=""):
+    return ft.TextField(
+        hint_text=hint,
+        bgcolor=CARD_COLOR,
+        border_color=BORDER_COLOR,
+        focused_border_color=ACCENT_GOLD,
+        color=TEXT_PRIMARY,
+        hint_style=ft.TextStyle(color=TEXT_SECONDARY, size=13),
+        text_size=13,
+        border_radius=6,
+        content_padding=ft.Padding.symmetric(horizontal=12, vertical=10),
+    )
+
+
+def build_add_supplier_dialog(page: ft.Page):
+    company_name_field = dialog_field("e.g. ABC Company")
+    poc_field = dialog_field("e.g. Shiela Reyes")
+    contact_field = dialog_field("e.g. (503) 555-0142")
+    address_field = dialog_field("e.g. Makati City, PH")
+    email_field = dialog_field("e.g. company@brewtrack.com")
+
+    def close_dialog(e=None):
+        dialog.open = False
+        page.update()
+
+    def create_supplier(e=None):
+        # TODO: wire this up to real supplier-creation logic (validation, saving, refreshing the table).
+        close_dialog()
+
+    cancel_btn = ft.OutlinedButton(
+        content=ft.Text("Cancel", size=13, weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY),
+        style=ft.ButtonStyle(
+            shape=ft.RoundedRectangleBorder(radius=6),
+            side=ft.BorderSide(1, BORDER_COLOR),
+            padding=ft.Padding.symmetric(horizontal=18, vertical=18),
+        ),
+        on_click=close_dialog,
+    )
+
+    create_btn = ft.ElevatedButton(
+        content=ft.Text("Create Supplier", size=13, weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY),
+        bgcolor=ACCENT_GOLD,
+        style=ft.ButtonStyle(
+            shape=ft.RoundedRectangleBorder(radius=6),
+            padding=ft.Padding.symmetric(horizontal=18, vertical=18),
+        ),
+        on_click=create_supplier,
+    )
+
+    dialog = ft.AlertDialog(
+        modal=True,
+        bgcolor=SIDEBAR_COLOR,
+        shape=ft.RoundedRectangleBorder(radius=10),
+        content=ft.Container(
+            width=560,
+            content=ft.Column(
+                [
+                    ft.Text("Add Supplier", size=22, color=TEXT_PRIMARY, weight=ft.FontWeight.BOLD),
+                    ft.Text("Vendor details used for procurement and purchase orders.",
+                            size=13, color=TEXT_SECONDARY),
+                    ft.Container(height=14),
+                    field_label("Company Name"),
+                    company_name_field,
+                    ft.Container(height=14),
+                    ft.Row(
+                        [
+                            ft.Column([field_label("Point of Contact"), poc_field], spacing=6, expand=True),
+                            ft.Column([field_label("Company Contact Number"), contact_field], spacing=6, expand=True),
+                        ],
+                        spacing=16,
+                    ),
+                    ft.Container(height=14),
+                    field_label("Company Address"),
+                    address_field,
+                    ft.Container(height=14),
+                    field_label("Company Email"),
+                    email_field,
+                ],
+                spacing=6,
+                tight=True,
+            ),
+            padding=28,
+        ),
+        actions=[cancel_btn, create_btn],
+        actions_alignment=ft.MainAxisAlignment.END,
+        actions_padding=ft.Padding.only(left=28, right=28, bottom=24, top=0),
+        content_padding=0,
+    )
+
+    return dialog
 
 
 def build_search_bar():
@@ -237,7 +334,15 @@ def build_suppliers_table():
 def supplier_management_view(page: ft.Page):
     sidebar = build_sidebar(page)
 
-    header = build_header()
+    add_supplier_dialog = build_add_supplier_dialog(page)
+    page.overlay.clear()
+    page.overlay.append(add_supplier_dialog)
+
+    def open_add_supplier_dialog(e=None):
+        add_supplier_dialog.open = True
+        page.update()
+
+    header = build_header(open_add_supplier_dialog)
     search_bar = build_search_bar()
     suppliers_table = build_suppliers_table()
 
