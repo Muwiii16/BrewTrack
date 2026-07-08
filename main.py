@@ -1,7 +1,12 @@
 import flet as ft
+from core.Inventory_monitoring import inventory_monitoring_view
+from core.stock_movement import movement_history_view
 from core.theme import *
 from core.login import login_view
 from core.dashboard import dashboard_view
+from core.ingredients_supply import ingredients_supply_view
+from core.supplier_management import supplier_management_view
+from core.user_management import user_management_view
 
 
 class BrewTrackApp:
@@ -27,7 +32,34 @@ class BrewTrackApp:
         """Called by login_view once db.authenticate() succeeds."""
         self.user = user
         self.page.clean()
-        self.page.add(dashboard_view(self.page, user, on_logout=self.show_login))
+        self.navigate_to("Dashboard")
+        
+    def navigate_to(self, page_name):
+        """The central router. Clears the screen and loads the requested page."""
+        self.page.clean()
+
+        if page_name == "Dashboard":
+            self.page.add(dashboard_view(self.page, self.user, self.show_login, self.navigate_to))
+            
+        elif page_name == "User Management":
+            self.page.add(user_management_view(self.page, self.user, self.show_login, self.navigate_to))
+            
+        elif page_name == "Supplier Management":
+            self.page.add(supplier_management_view(self.page, self.user, self.show_login, self.navigate_to))
+            
+        elif page_name == "Ingredients & Supplies":
+            self.page.add(ingredients_supply_view(self.page, self.user, self.show_login, self.navigate_to))
+           
+        elif page_name == "Inventory Monitoring":
+            self.page.add(inventory_monitoring_view(self.page, self.user, self.show_login, self.navigate_to))
+            
+        elif page_name == "Movement History":
+            self.page.add(movement_history_view(self.page, self.user, self.show_login, self.navigate_to))
+        """"   
+        elif page_name == "Ingredients & Supplies":
+            self.page.add(ingredients_supply_view(self.page, self.user, self.show_login, self.navigate_to))
+        """
+        self.page.update()
         
 def main(page: ft.Page):
     BrewTrackApp(page)
