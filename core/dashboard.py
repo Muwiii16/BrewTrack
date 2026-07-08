@@ -275,7 +275,7 @@ def dashboard_view(page: ft.Page, user=None, show_login=None, global_navigate_to
 
     def navigate_to(e, view_name):
         # Local rendering for dashboard sub-views
-        if view_name in ["Dashboard", "Low-Stock Alerts", "Purchase Orders"]:
+        if view_name in ["Dashboard", "Low-Stock Items", "Purchase Orders"]:
             render_view(view_name)
             page.update()
         # Global routing for other main modules (e.g., User Management)
@@ -332,7 +332,7 @@ def dashboard_view(page: ft.Page, user=None, show_login=None, global_navigate_to
                         
                         _sidebar_section_title("Operations"),
                         _sidebar_link("Inventory Monitoring"),
-                        _sidebar_link("Low-Stock Alerts"),
+                        _sidebar_link("Low-Stock Items"),
                         _sidebar_link("Purchase Orders"),
                         _sidebar_link("Movement History"),
                         
@@ -386,7 +386,7 @@ def dashboard_view(page: ft.Page, user=None, show_login=None, global_navigate_to
         # Route to the correct separated file
         if view_name == "Dashboard":
             main_content.content = AdminOverview(page)
-        elif view_name == "Low-Stock Alerts":
+        elif view_name == "Low-Stock Items":
             main_content.content = AdminLowStock(page, open_new_po_modal)
         elif view_name == "Purchase Orders":
             main_content.content = AdminPurchaseOrders(page, open_new_po_modal)

@@ -20,7 +20,7 @@ def user_management_view(page: ft.Page, user=None, show_login=None, global_navig
 
     def navigate_to(e, view_name):
         # If they click a dashboard-specific tab, send them back to the Dashboard
-        if view_name in ["Dashboard", "Low-Stock Alerts", "Purchase Orders"]:
+        if view_name in ["Dashboard", "Low-Stock Items", "Purchase Orders"]:
             if global_navigate_to:
                 global_navigate_to("Dashboard")
         # Otherwise, route normally
@@ -75,7 +75,7 @@ def user_management_view(page: ft.Page, user=None, show_login=None, global_navig
                         
                         _sidebar_section_title("Operations"),
                         _sidebar_link("Inventory Monitoring"),
-                        _sidebar_link("Low-Stock Alerts"),
+                        _sidebar_link("Low-Stock Items"),
                         _sidebar_link("Purchase Orders"),
                         _sidebar_link("Movement History"),
                         

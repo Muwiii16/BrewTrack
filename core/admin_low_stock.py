@@ -121,11 +121,11 @@ def AdminLowStock(page: ft.Page, open_new_po_modal):
                         spacing=8,
                         controls=[
                             ft.Icon(ft.Icons.GRID_VIEW_ROUNDED, size=20, color=TEXT_MUTED),
-                            ft.Text("Low-Stocks Alert", size=14, color=TEXT_MUTED, weight="bold")
+                            ft.Text("Low-Stock Items", size=14, color=TEXT_MUTED, weight="bold")
                         ]
                     ),
                     ft.Container(height=10),
-                    ft.Text("Low-Stocks Alert", size=28, weight="bold", color=TEXT_PRIMARY),
+                    ft.Text("Low-Stock Items", size=28, weight="bold", color=TEXT_PRIMARY),
                     ft.Text("Items at or below their reorder level. Replenish these to avoid production stoppages", size=12, color=TEXT_MUTED),
                 ]
             ),
