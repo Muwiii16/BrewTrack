@@ -63,11 +63,11 @@ class BrewTrackApp:
 
         elif page_name == "Receiving/Stock-In":
             if self.user and self.user["role"].lower() == "staff":
-                self.page.add(staff_receiving_view(self.page, self.user,
-                                                   self.show_login, self.navigate_to))
-            else:
                 self.page.add(receiving_stock_in_view(self.page, self.user,
                                                       self.show_login, self.navigate_to))
+            else:
+                self.page.add(staff_receiving_view(self.page, self.user,
+                                                   self.show_login, self.navigate_to))
 
         elif page_name == "Stock-Out/Usage":
             self.page.add(stock_out_usage_view(self.page, self.user,
