@@ -108,8 +108,8 @@ def _po_list_item(po_num, status, supplier, date_created, expected_date, amount,
         )
     )
 
-def _cell(text, is_bold=False):
-    return ft.DataCell(ft.Text(text, size=13, weight="bold" if is_bold else "normal", color=TEXT_PRIMARY))
+def _cell(text, is_bold=False, text_color=None):
+    return ft.DataCell(ft.Text(text, size=13, weight="bold" if is_bold else "normal", color=text_color or TEXT_PRIMARY))
 
 def _summary_card(title: str, value: str, subtitle: str = None):
     controls = [

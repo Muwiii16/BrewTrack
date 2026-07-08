@@ -9,6 +9,8 @@ from core.dashboard import dashboard_view
 # from core.ingredients_supply import ingredients_supply_view
 # from core.supplier_management import supplier_management_view
 from core.user_management import user_management_view
+from core.supplier_management import supplier_management_view
+from core.ingredients_supply import ingredients_supply_view
 
 
 class BrewTrackApp:
@@ -40,36 +42,37 @@ class BrewTrackApp:
         """The central router. Clears the screen and loads the requested page."""
         self.page.clean()
 
-        if page_name == "Dashboard":
-            self.page.add(dashboard_view(self.page, self.user, self.show_login, self.navigate_to))
+        if page_name in ["Dashboard", "Low-Stock Items", "Purchase Orders", "Reports"]:
+            self.page.add(dashboard_view(self.page, self.user, self.show_login, self.navigate_to, initial_view=page_name))
             
         elif page_name == "User Management":
             self.page.add(user_management_view(self.page, self.user, self.show_login, self.navigate_to))
             
+        elif page_name == "Suppliers":
+             self.page.add(supplier_management_view(self.page, self.user, self.show_login, self.navigate_to))
+             
+        elif page_name == "Ingredients & Supplies":
+             self.page.add(ingredients_supply_view(self.page, self.user, self.show_login, self.navigate_to))
+            
+        elif page_name == "Inventory Monitoring":
+            from core.inventory_monitoring import inventory_monitoring_view
+            self.page.add(inventory_monitoring_view(self.page, self.user, self.show_login, self.navigate_to))
+            
+        elif page_name == "Movement History":
+            from core.movement_history import movement_history_view
+            self.page.add(movement_history_view(self.page, self.user, self.show_login, self.navigate_to))
+        
+        elif page_name == "Receiving/ Stock-In":
+            from core.receiving_stock_in import receiving_stock_in_view
+            self.page.add(receiving_stock_in_view(self.page, self.user, self.show_login, self.navigate_to))
+            
+        elif page_name == "Stock-Out/ Usage":
+            from core.stock_out_usage import stock_out_usage_view
+            self.page.add(stock_out_usage_view(self.page, self.user, self.show_login, self.navigate_to))
+        
         # --- TEMPORARILY COMMENTED OUT PENDING ROUTES ---
-        # elif page_name == "Supplier Management":
-        #     self.page.add(supplier_management_view(self.page, self.user, self.show_login, self.navigate_to))
-        #     
-        # elif page_name == "Ingredients & Supplies":
-        #     self.page.add(ingredients_supply_view(self.page, self.user, self.show_login, self.navigate_to))
-        #    
-        # elif page_name == "Inventory Monitoring":
-        #     self.page.add(inventory_monitoring_view(self.page, self.user, self.show_login, self.navigate_to))
-        #     
-        # elif page_name == "Movement History":
-        #     self.page.add(movement_history_view(self.page, self.user, self.show_login, self.navigate_to))
-        
         """
-        elif page_name == "Recieving/ Stock-In":
-            self.page.add(ingredients_supply_view(self.page, self.user, self.show_login, self.navigate_to))
-            
-        elif page_name == "Usage/ Stock-Out":
-            self.page.add(ingredients_supply_view(self.page, self.user, self.show_login, self.navigate_to))
-        
         elif page_name == "Daily Sales":
-            self.page.add(ingredients_supply_view(self.page, self.user, self.show_login, self.navigate_to))
-            
-        elif page_name == "Reports":
             self.page.add(ingredients_supply_view(self.page, self.user, self.show_login, self.navigate_to))
         """
         self.page.update()

@@ -19,12 +19,7 @@ def user_management_view(page: ft.Page, user=None, show_login=None, global_navig
     )
 
     def navigate_to(e, view_name):
-        # If they click a dashboard-specific tab, send them back to the Dashboard
-        if view_name in ["Dashboard", "Low-Stock Items", "Purchase Orders"]:
-            if global_navigate_to:
-                global_navigate_to("Dashboard")
-        # Otherwise, route normally
-        elif global_navigate_to:
+        if global_navigate_to:
             global_navigate_to(view_name)
 
     def build_sidebar(active_view: str):
