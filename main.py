@@ -8,7 +8,7 @@ from core.dashboard import dashboard_view
 # from core.stock_movement import movement_history_view
 # from core.ingredients_supply import ingredients_supply_view
 # from core.supplier_management import supplier_management_view
-# from core.user_management import user_management_view
+from core.user_management import user_management_view
 
 
 class BrewTrackApp:
@@ -43,10 +43,10 @@ class BrewTrackApp:
         if page_name == "Dashboard":
             self.page.add(dashboard_view(self.page, self.user, self.show_login, self.navigate_to))
             
+        elif page_name == "User Management":
+            self.page.add(user_management_view(self.page, self.user, self.show_login, self.navigate_to))
+            
         # --- TEMPORARILY COMMENTED OUT PENDING ROUTES ---
-        # elif page_name == "User Management":
-        #     self.page.add(user_management_view(self.page, self.user, self.show_login, self.navigate_to))
-        #     
         # elif page_name == "Supplier Management":
         #     self.page.add(supplier_management_view(self.page, self.user, self.show_login, self.navigate_to))
         #     
