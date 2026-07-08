@@ -8,6 +8,7 @@ from core.inventory_monitoring import inventory_monitoring_view
 from core.low_stock_alerts import low_stock_alerts_view
 from core.receiving_stock_in import receiving_stock_in_view
 from core.stock_out_usage import stock_out_usage_view
+from core.daily_sales import daily_sales_view
 
 
 class BrewTrackApp:
@@ -66,6 +67,10 @@ class BrewTrackApp:
         elif page_name == "Stock-Out/Usage":
             self.page.add(stock_out_usage_view(self.page, self.user,
                                                self.show_login, self.navigate_to))
+
+        elif page_name == "Daily Sales":
+            self.page.add(daily_sales_view(self.page, self.user,
+                                           self.show_login, self.navigate_to))
 
         self.page.update()
 

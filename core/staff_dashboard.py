@@ -6,7 +6,6 @@ from core.dashboard import (
     build_header,
     build_stats_row,
     build_low_stock_card,
-    build_movements_card,
     build_purchase_orders_bar,
     stat_card,
 )
@@ -45,11 +44,10 @@ def staff_dashboard_view(page: ft.Page, user, on_logout, on_nav):
     header = build_header(user["full_name"])
     stats_row = build_stats_row()
     low_stock_card = build_low_stock_card()
-    movements_card = build_movements_card()
     po_bar = build_purchase_orders_bar()
 
     cards_row = ft.Row(
-        [low_stock_card, movements_card],
+        [low_stock_card],
         spacing=16,
     )
 

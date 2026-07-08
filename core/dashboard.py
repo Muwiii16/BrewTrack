@@ -36,7 +36,7 @@ def build_sidebar(page: ft.Page, user, on_logout, current_page, on_nav):
         nav_groups = [
             ("Overview", ["Dashboard"]),
             ("Operations", ["Inventory Monitoring",
-             "Low-Stock Alerts", "Movement History"]),
+             "Low-Stock Alerts"]),
             ("Transactions", ["Receiving/Stock-In",
              "Stock-Out/Usage", "Daily Sales"]),
         ]
