@@ -1,5 +1,5 @@
 import flet as ft
-from core.Inventory_monitoring import inventory_monitoring_view
+from core.inventory_monitoring import inventory_monitoring_view
 from core.stock_movement import movement_history_view
 from core.theme import *
 from core.login import login_view
