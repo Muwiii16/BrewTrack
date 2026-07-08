@@ -1,8 +1,26 @@
 import flet as ft
 from core.theme import *
 from core.components import _po_summary_card_small, _po_list_item
+from models import purchase_order_model
+
+def format_date(d):
+    if not d: 
+        return "N/A"
+    try:
+        return d.strftime("%b %d, %Y")
+    except AttributeError:
+        return str(d)[:10]
 
 def AdminPurchaseOrders(page: ft.Page, open_new_po_modal):
+    # Fetch real POs from the DB
+    all_pos = purchase_order_model.get_purchase_orders()
+    
+    # Calculate Summary metrics
+    open_count = sum(1 for po in all_pos if po['po_status'] in ['Pending', 'Approved'])
+    pending_count = sum(1 for po in all_pos if po['po_status'] == 'Pending')
+    approved_count = sum(1 for po in all_pos if po['po_status'] == 'Approved')
+    received_count = sum(1 for po in all_pos if po['po_status'] == 'Received')
+
     action_bar = ft.Row(
         alignment="spaceBetween",
         controls=[
@@ -34,6 +52,41 @@ def AdminPurchaseOrders(page: ft.Page, open_new_po_modal):
         ]
     )
 
+    po_list_controls = []
+    
+    if not all_pos:
+        po_list_controls.append(
+            ft.Container(
+                padding=40, 
+                alignment=ft.Alignment.CENTER, 
+                content=ft.Text("No Purchase Orders found. Create a new one to get started.", color=TEXT_MUTED)
+            )
+        )
+    else:
+        for po in all_pos:
+            items = po.get('items', [])
+            total_amount = sum(float(i['line_total']) for i in items)
+            items_count = len(items)
+            
+            # Create chips summarizing the ordered items
+            chips = []
+            for i in items:
+                # Eg: "Coffee Beans * 5 kg * P500.00"
+                chips.append(f"{i['item_name']} * {float(i['ordered_quantity']):g} * P{float(i['unit_cost']):,.2f}")
+                
+            po_list_controls.append(
+                _po_list_item(
+                    po_num=f"PO-{po['po_id']:04d}",
+                    status=po['po_status'],
+                    supplier=po['supplier_name'] or "Unknown",
+                    date_created=format_date(po['po_date']),
+                    expected_date=format_date(po['expected_delivery_date']),
+                    amount=f"P {total_amount:,.2f}",
+                    items_count=str(items_count),
+                    chips=chips
+                )
+            )
+
     return ft.Column(
         expand=True,
         scroll="auto",
@@ -60,10 +113,10 @@ def AdminPurchaseOrders(page: ft.Page, open_new_po_modal):
             ft.Row(
                 spacing=20,
                 controls=[
-                    _po_summary_card_small("Open Orders", "2"),
-                    _po_summary_card_small("Pending Approval", "1"),
-                    _po_summary_card_small("Approved", "1"),
-                    _po_summary_card_small("Received", "1"),
+                    _po_summary_card_small("Open Orders", str(open_count)),
+                    _po_summary_card_small("Pending Approval", str(pending_count)),
+                    _po_summary_card_small("Approved", str(approved_count)),
+                    _po_summary_card_small("Received", str(received_count)),
                 ]
             ),
             
@@ -72,28 +125,7 @@ def AdminPurchaseOrders(page: ft.Page, open_new_po_modal):
             # List of Purchase Orders
             ft.Column(
                 spacing=15,
-                controls=[
-                    _po_list_item(
-                        po_num="PO- 1001", 
-                        status="Pending", 
-                        supplier="ABC Farms", 
-                        date_created="Jul 3, 2026", 
-                        expected_date="Jul 8, 2026", 
-                        amount="P 800.00", 
-                        items_count="2",
-                        chips=["Arabica Coffee Beans * 5 kg * P500.00", "Black Coffee Beans * 5 kg * P300.00"]
-                    ),
-                    _po_list_item(
-                        po_num="PO- 1002", 
-                        status="Approved", 
-                        supplier="ABC Farms", 
-                        date_created="Jul 3, 2026", 
-                        expected_date="Jul 8, 2026", 
-                        amount="P 1,200.00", 
-                        items_count="2",
-                        chips=["Ceremonial Matcha Powder * 5 kg * P600.00", "Culinary Matcha Powder * 5 kg * P600.00"]
-                    ),
-                ]
+                controls=po_list_controls
             )
         ]
     )

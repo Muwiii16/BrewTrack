@@ -1,6 +1,6 @@
 import flet as ft
 from core.theme import *
-
+from models import user_model
 
 def _social_button(icon: str):
     return ft.Container(
@@ -13,7 +13,6 @@ def _social_button(icon: str):
         ink=True,
         on_click=lambda e: None,
     )
-
 
 def _left_panel():
     return ft.Container(
@@ -45,12 +44,10 @@ def _left_panel():
         ),
     )
 
-
-def _right_panel(page: ft.Page):
-    # Pre-filled with Admin credentials for easy testing!
-    email_field = ft.TextField(
-        value="admin@brewtrack.com",
-        hint_text="juandelacruz@gmail.com",
+def _right_panel(page: ft.Page, on_login_success=None):
+    # Field to accept both username and email
+    identifier_field = ft.TextField(
+        hint_text="Email or Username",
         hint_style=ft.TextStyle(color=TEXT_MUTED, size=13),
         bgcolor=INPUT_BG,
         border_color=INPUT_BORDER,
@@ -62,7 +59,6 @@ def _right_panel(page: ft.Page):
     )
 
     password_field = ft.TextField(
-        value="admin_password123",
         hint_text="••••••••",
         hint_style=ft.TextStyle(color=TEXT_MUTED, size=13),
         password=True,
@@ -76,20 +72,47 @@ def _right_panel(page: ft.Page):
         height=44,
     )
 
-    def sign_up_clicked(e):
-        # 1. Clear the login UI from the screen completely
-        page.controls.clear()
-        
-        # 2. Check the email to determine which dashboard to show (Admin vs Staff)
-        if email_field.value == "admin@brewtrack.com":
-            from core.dashboard import dashboard_view
-            page.add(dashboard_view(page))
-        else:
-            from core.staff_dashboard import staff_dashboard_view
-            page.add(staff_dashboard_view(page))
-            
-        # 3. Tell Flet to redraw the window
+    def show_error(message):
+        snack = ft.SnackBar(
+            content=ft.Text(message, color=ft.Colors.WHITE), 
+            bgcolor=ft.Colors.RED_800
+        )
+        page.overlay.append(snack)
+        snack.open = True
         page.update()
+
+    def login_clicked(e):
+        identifier = identifier_field.value.strip()
+        password = password_field.value.strip()
+
+        if not identifier or not password:
+            show_error("Please enter both email/username and password.")
+            return
+
+        # Authenticate via the DB model
+        user = user_model.authenticate(identifier, password)
+        
+        if user:
+            # Show friendly welcome message
+            snack = ft.SnackBar(
+                content=ft.Text(f"Welcome back, {user['full_name']}!", color=ft.Colors.WHITE), 
+                bgcolor=ft.Colors.GREEN_800
+            )
+            page.overlay.append(snack)
+            snack.open = True
+            page.update()
+            
+            # Pass user back up to the app router (main.py)
+            if on_login_success:
+                on_login_success(user)
+        else:
+            show_error("Invalid credentials or inactive account.")
+            password_field.value = ""
+            page.update()
+
+    # Allow Enter key to trigger login
+    identifier_field.on_submit = login_clicked
+    password_field.on_submit = login_clicked
 
     return ft.Container(
         expand=1,
@@ -102,7 +125,7 @@ def _right_panel(page: ft.Page):
             spacing=14,
             controls=[
                 ft.Text(
-                    "Create Account",
+                    "Welcome Back",
                     size=26,
                     weight=ft.FontWeight.BOLD,
                     color=TEXT_PRIMARY,
@@ -117,7 +140,7 @@ def _right_panel(page: ft.Page):
                     ],
                 ),
                 ft.Text(
-                    "or use your email for registration",
+                    "or log in with your account credentials",
                     size=12,
                     color=TEXT_MUTED,
                 ),
@@ -125,8 +148,8 @@ def _right_panel(page: ft.Page):
                 ft.Column(
                     spacing=4,
                     controls=[
-                        ft.Text("Email", size=12, weight=ft.FontWeight.W_600, color=TEXT_LABEL),
-                        email_field,
+                        ft.Text("Email / Username", size=12, weight=ft.FontWeight.W_600, color=TEXT_LABEL),
+                        identifier_field,
                     ],
                 ),
                 ft.Column(
@@ -144,9 +167,9 @@ def _right_panel(page: ft.Page):
                     bgcolor=ACCENT_DARK,
                     alignment=ft.Alignment.CENTER,
                     ink=True,
-                    on_click=sign_up_clicked,
+                    on_click=login_clicked,
                     content=ft.Text(
-                        "Sign Up",
+                        "Sign In",
                         size=13,
                         weight=ft.FontWeight.BOLD,
                         color=TEXT_PRIMARY,
@@ -156,8 +179,7 @@ def _right_panel(page: ft.Page):
         ),
     )
 
-
-def login_view(page: ft.Page):
+def login_view(page: ft.Page, on_login_success=None):
     card = ft.Container(
         width=720,
         height=430,
@@ -168,7 +190,7 @@ def login_view(page: ft.Page):
             expand=True,
             controls=[
                 _left_panel(),
-                _right_panel(page),
+                _right_panel(page, on_login_success),
             ],
         ),
     )
@@ -181,7 +203,6 @@ def login_view(page: ft.Page):
             expand=True,
             spacing=20,
             controls=[
-                ft.Text("Log In Page", size=14, color=TEXT_MUTED),
                 ft.Container(
                     expand=True,
                     alignment=ft.Alignment.CENTER,

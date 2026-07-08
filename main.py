@@ -3,56 +3,79 @@ from core.theme import *
 from core.login import login_view
 from core.dashboard import dashboard_view
 
-def main(page: ft.Page):
-    page.title = "BrewTrack"
-    page.bgcolor = BG_COLOR
-    page.theme_mode = ft.ThemeMode.DARK
-    page.padding = 0
+# --- TEMPORARILY COMMENTED OUT PENDING VIEWS ---
+# from core.inventory_monitoring import inventory_monitoring_view
+# from core.stock_movement import movement_history_view
+# from core.ingredients_supply import ingredients_supply_view
+# from core.supplier_management import supplier_management_view
+# from core.user_management import user_management_view
 
-    try:
-        page.window.maximized = True
-    except AttributeError:
-        pass
 
-    # --- Routing Logic ---
-    def route_change(e):
-        page.views.clear()
+class BrewTrackApp:
+    def __init__(self, page: ft.Page):
+        self.page = page
+        self.page.title = "BrewTrack"
+        self.page.bgcolor = BG_COLOR
+        self.page.theme_mode = ft.ThemeMode.DARK
+        self.page.padding = 0
+        self.page.window.maximized = True
+        #self.page.window.full_screen = True
+
+        self.user = None  # holds the logged-in user's row (dict) once authenticated
+ 
+        self.show_login()  # start with the login view
+ 
+    def show_login(self):
+        self.user = None
+        self.page.clean()
+        self.page.add(login_view(self.page, on_login_success=self.show_dashboard))
+ 
+    def show_dashboard(self, user):
+        """Called by login_view once db.authenticate() succeeds."""
+        self.user = user
+        self.page.clean()
+        self.navigate_to("Dashboard")
         
-        # Default route (Login)
-        page.views.append(
-            ft.View(
-                route="/",
-                controls=[login_view(page)],
-                bgcolor=BG_COLOR,
-                padding=0
-            )
-        )
-        
-        # Dashboard route
-        if page.route == "/dashboard":
-            page.views.append(
-                ft.View(
-                    route="/dashboard",
-                    controls=[dashboard_view(page)],
-                    bgcolor=BG_COLOR,
-                    padding=0
-                )
-            )
+    def navigate_to(self, page_name):
+        """The central router. Clears the screen and loads the requested page."""
+        self.page.clean()
+
+        if page_name == "Dashboard":
+            self.page.add(dashboard_view(self.page, self.user, self.show_login, self.navigate_to))
             
-        page.update()
-
-    def view_pop(e):
-        page.views.pop()
-        top_view = page.views[-1]
-        page.route = top_view.route
-        page.update()
-
-    # Attach routing events to the page
-    page.on_route_change = route_change
-    page.on_view_pop = view_pop
+        # --- TEMPORARILY COMMENTED OUT PENDING ROUTES ---
+        # elif page_name == "User Management":
+        #     self.page.add(user_management_view(self.page, self.user, self.show_login, self.navigate_to))
+        #     
+        # elif page_name == "Supplier Management":
+        #     self.page.add(supplier_management_view(self.page, self.user, self.show_login, self.navigate_to))
+        #     
+        # elif page_name == "Ingredients & Supplies":
+        #     self.page.add(ingredients_supply_view(self.page, self.user, self.show_login, self.navigate_to))
+        #    
+        # elif page_name == "Inventory Monitoring":
+        #     self.page.add(inventory_monitoring_view(self.page, self.user, self.show_login, self.navigate_to))
+        #     
+        # elif page_name == "Movement History":
+        #     self.page.add(movement_history_view(self.page, self.user, self.show_login, self.navigate_to))
+        
+        """
+        elif page_name == "Recieving/ Stock-In":
+            self.page.add(ingredients_supply_view(self.page, self.user, self.show_login, self.navigate_to))
+            
+        elif page_name == "Usage/ Stock-Out":
+            self.page.add(ingredients_supply_view(self.page, self.user, self.show_login, self.navigate_to))
+        
+        elif page_name == "Daily Sales":
+            self.page.add(ingredients_supply_view(self.page, self.user, self.show_login, self.navigate_to))
+            
+        elif page_name == "Reports":
+            self.page.add(ingredients_supply_view(self.page, self.user, self.show_login, self.navigate_to))
+        """
+        self.page.update()
+        
+def main(page: ft.Page):
+    BrewTrackApp(page)
     
-    # Force the initial route load
-    page.route = "/"
-    route_change(None)
-
-ft.run(main, assets_dir='assets')
+if __name__ == "__main__":
+    ft.app(target=main, assets_dir="assets")

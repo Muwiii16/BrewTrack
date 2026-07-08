@@ -1,8 +1,27 @@
 import flet as ft
 from core.theme import *
 from core.components import _summary_card, _badge, _cell
+from models import inventory_model
 
 def AdminLowStock(page: ft.Page, open_new_po_modal):
+    # Fetch real data from the database
+    low_stock_items = inventory_model.get_low_stock_items()
+    
+    needs_attention_count = len(low_stock_items)
+    out_of_stock_count = sum(1 for item in low_stock_items if float(item['current_quantity']) <= 0)
+    
+    # Calculate estimated replenishment cost (assuming we order at least the reorder level to restock safely)
+    replenishment_cost = 0.0
+    for item in low_stock_items:
+        curr_qty = float(item['current_quantity'])
+        ro_level = float(item['reorder_level'])
+        cost = float(item['cost_per_unit'])
+        
+        # Calculate how much to order to get back comfortably above the reorder line
+        shortage = max(ro_level - curr_qty, 0)
+        suggested_qty = max(shortage, ro_level) # Minimum order of reorder_level
+        replenishment_cost += suggested_qty * cost
+
     action_bar = ft.Row(
         alignment="spaceBetween",
         controls=[
@@ -34,6 +53,31 @@ def AdminLowStock(page: ft.Page, open_new_po_modal):
         ]
     )
 
+    table_rows = []
+    for item in low_stock_items:
+        curr_qty = float(item['current_quantity'])
+        ro_level = float(item['reorder_level'])
+        uom = item['unit_of_measurement']
+        supplier_name = item['supplier_name'] if item['supplier_name'] else "Unassigned"
+        
+        # Suggest quantity logic
+        shortage = max(ro_level - curr_qty, 0)
+        suggested_qty = max(shortage, ro_level)
+        
+        is_out = (curr_qty <= 0)
+        status_text = "Out of Stock" if is_out else "Low"
+        status_bg = "#330000" if is_out else "#332400"
+        status_fg = "#F44336" if is_out else ACCENT
+
+        table_rows.append(ft.DataRow(cells=[
+            _cell(item['item_name'], True),
+            _cell(supplier_name),
+            _cell(f"{curr_qty:g} {uom}"),
+            _cell(f"{ro_level:g} {uom}"),
+            _cell(f"{suggested_qty:g} {uom}"),
+            ft.DataCell(_badge(status_text, status_bg, status_fg))
+        ]))
+
     table = ft.DataTable(
         expand=True,
         bgcolor=ft.Colors.TRANSPARENT,
@@ -52,13 +96,18 @@ def AdminLowStock(page: ft.Page, open_new_po_modal):
             ft.DataColumn(ft.Text("Suggested Qty.", size=15, weight="bold", color=TEXT_PRIMARY)),
             ft.DataColumn(ft.Text("Status", size=15, weight="bold", color=TEXT_PRIMARY)),
         ],
-        rows=[
-            ft.DataRow(cells=[_cell("Coffee Bean", True), _cell("ABC Company"), _cell("145 kg"), _cell("150 kg"), _cell("350 kg"), ft.DataCell(_badge("Low", "#332400", ACCENT))]),
-            ft.DataRow(cells=[_cell("Matcha Powder", True), _cell("ABC Company"), _cell("120 g"), _cell("150 g"), _cell("250 g"), ft.DataCell(_badge("Low", "#332400", ACCENT))]),
-            ft.DataRow(cells=[_cell("Oatmilk", True), _cell("ABC Company"), _cell("1 L"), _cell("3 L"), _cell("5 boxes"), ft.DataCell(_badge("Low", "#332400", ACCENT))]),
-            ft.DataRow(cells=[_cell("Vanilla Syrup", True), _cell("ZXC Farm"), _cell("2 L"), _cell("5 L"), _cell("10 bottles"), ft.DataCell(_badge("Low", "#332400", ACCENT))]),
-        ]
+        rows=table_rows
     )
+    
+    # Handle empty state
+    if not table_rows:
+        table_container = ft.Container(
+            padding=40,
+            alignment=ft.Alignment.CENTER,
+            content=ft.Text("All inventory levels are healthy! No low stock alerts.", color=TEXT_MUTED)
+        )
+    else:
+        table_container = table
 
     return ft.Column(
         expand=True,
@@ -83,9 +132,9 @@ def AdminLowStock(page: ft.Page, open_new_po_modal):
             ft.Row(
                 spacing=20,
                 controls=[
-                    _summary_card("Items Needing Attention", "7"),
-                    _summary_card("Out of Stock", "0"),
-                    _summary_card("Estimated Replenishment Cost", "P 33,470.7"),
+                    _summary_card("Items Needing Attention", str(needs_attention_count)),
+                    _summary_card("Out of Stock", str(out_of_stock_count)),
+                    _summary_card("Estimated Replenishment Cost", f"P {replenishment_cost:,.2f}"),
                 ]
             ),
             action_bar,
@@ -93,7 +142,7 @@ def AdminLowStock(page: ft.Page, open_new_po_modal):
                 expand=True,
                 content=ft.Column(
                     scroll="auto",
-                    controls=[table]
+                    controls=[table_container]
                 )
             )
         ]
