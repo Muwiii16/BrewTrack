@@ -6,6 +6,7 @@ from models import user_model
 def _fake_login(role, on_login_success):
     """TEMP: bypasses real authentication for now"""
     fake_user = {
+        "user_id": 1,  # TEMP - must match a real row in your users table for DB writes to work
         "full_name": "Marco Reyes" if role == "staff" else "Juan Dela Cruz",
         "role": "Staff" if role == "staff" else "Owner/Admin",
     }
