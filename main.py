@@ -5,6 +5,7 @@ from core.login import login_view
 from core.dashboard import dashboard_view
 from core.staff_dashboard import staff_dashboard_view
 from core.inventory_monitoring import inventory_monitoring_view
+from core.low_stock_alerts import low_stock_alerts_view
 
 
 class BrewTrackApp:
@@ -50,6 +51,10 @@ class BrewTrackApp:
 
         elif page_name == "Inventory Monitoring":
             self.page.add(inventory_monitoring_view(self.page, self.user,
+                          self.show_login, self.navigate_to))
+
+        elif page_name == "Low-Stock Alerts":
+            self.page.add(low_stock_alerts_view(self.page, self.user,
                           self.show_login, self.navigate_to))
 
         self.page.update()
