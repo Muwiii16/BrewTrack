@@ -12,48 +12,51 @@ def nav_item(text, selected=False):
     return ft.Text(text, size=13, color=TEXT_PRIMARY if selected else TEXT_SECONDARY, weight=ft.FontWeight.NORMAL,)
 
 
-def build_sidebar(page: ft.Page):
+def build_sidebar(page: ft.Page, role='admin', active_page='Dashboard', user_name='Marco Reyes', user_role_label='Staff'):
+
     logo_block = ft.Column([
         ft.Image(src='assets/BFC_logo.jpg', width=140, fit=ft.BoxFit.CONTAIN),
         ft.Text('BrewTrack', size=22, color=TEXT_PRIMARY,
                 weight=ft.FontWeight.BOLD),
     ], spacing=6,)
 
-    nav_column = ft.Column([
-        nav_section_label("Overview"),
-        nav_item("Dashboard", selected=True),
+    if role == 'staff':
+        nav_groups = [
+            ("Overview", ["Dashboard"]),
+            ("Operations", ["Inventory Monitoring",
+             "Low-Stock Alerts", "Movement History"]),
+            ("Transactions", ["Receiving/Stock-In",
+             "Stock-Out/Usage", "Daily Sales"]),
+        ]
+    else:
+        nav_groups = [
+            ("Overview", ["Dashboard"]),
+            ("Master Records", ["User Management",
+             "Suppliers", "Ingredients & Supplies"]),
+            ("Operations", ["Inventory Monitoring", "Low-Stock Alerts",
+             "Purchase Orders", "Movement History"]),
+            ("Transactions", ["Receiving/Stock-In",
+             "Stock-Out/Usage", "Daily Sales"]),
+            ("Insights", ["Reports"]),
+        ]
 
-        ft.Container(height=12),  # spacer
-        nav_section_label("Master Records"),
-        nav_item("User Management"),
-        nav_item("Suppliers"),
-        nav_item("Ingredients & Supplies"),
+    nav_children = []
+    for label, items in nav_groups:
+        nav_children.append(nav_section_label(label))
+        for item in items:
+            nav_children.append(nav_item(item, selected=(item == active_page)))
+        nav_children.append(ft.Container(height=12))
 
-        ft.Container(height=12),
-        nav_section_label("Operations"),
-        nav_item("Inventory Monitoring"),
-        nav_item("Low-Stock Alerts"),
-        nav_item("Purchase Orders"),
-        nav_item("Movement History"),
-
-        ft.Container(height=12),
-        nav_section_label("Transactions"),
-        nav_item("Receiving/Stock-In"),
-        nav_item("Stock-Out/Usage"),
-        nav_item("Daily Sales"),
-
-        ft.Container(height=12),
-        nav_section_label("Insights"),
-        nav_item("Reports"),
-    ], spacing=10, scroll=ft.ScrollMode.AUTO, expand=True,)
+    nav_column = ft.Column(nav_children, spacing=10,
+                           scroll=ft.ScrollMode.AUTO, expand=True,)
 
     profile_block = ft.Row([
         ft.Icon(ft.Icons.ACCOUNT_CIRCLE_ROUNDED,
                 size=36, color=TEXT_SECONDARY),
         ft.Column([
-            ft.Text("John Doe", size=13, color=TEXT_PRIMARY,
+            ft.Text(user_name, size=13, color=TEXT_PRIMARY,
                     weight=ft.FontWeight.BOLD),
-            ft.Text("Admin", size=11, color=TEXT_SECONDARY),
+            ft.Text(user_role_label, size=11, color=TEXT_SECONDARY),
         ], spacing=0)
     ], spacing=8,)
 
@@ -300,7 +303,8 @@ def build_purchase_orders_bar():
 
 
 def dashboard_view(page: ft.Page):
-    sidebar = build_sidebar(page)
+    sidebar = build_sidebar(page, role="staff", active_page="Dashboard",
+                            user_name="Marco Reyes", user_role_label="Staff")
 
     header = build_header('Juan')
     stats_row = build_stats_row()
