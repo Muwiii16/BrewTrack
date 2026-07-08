@@ -12,86 +12,107 @@ def format_date(d):
         return str(d)[:10]
 
 def AdminPurchaseOrders(page: ft.Page, open_new_po_modal):
-    # Fetch real POs from the DB
-    all_pos = purchase_order_model.get_purchase_orders()
+    # Main container that will hold all dynamic content
+    main_container = ft.Column(expand=True, scroll="auto", spacing=30)
     
-    # Calculate Summary metrics
-    open_count = sum(1 for po in all_pos if po['po_status'] in ['Pending', 'Approved'])
-    pending_count = sum(1 for po in all_pos if po['po_status'] == 'Pending')
-    approved_count = sum(1 for po in all_pos if po['po_status'] == 'Approved')
-    received_count = sum(1 for po in all_pos if po['po_status'] == 'Received')
+    # --- Action Handlers ---
+    def handle_approve(po_id):
+        purchase_order_model.approve_po(po_id)
+        snack = ft.SnackBar(content=ft.Text(f"Purchase Order PO-{po_id:04d} Approved!"), bgcolor=ft.Colors.GREEN_800)
+        page.overlay.append(snack)
+        snack.open = True
+        load_data() # Refresh screen
+        
+    def handle_cancel(po_id):
+        purchase_order_model.cancel_po(po_id)
+        snack = ft.SnackBar(content=ft.Text(f"Purchase Order PO-{po_id:04d} Cancelled."), bgcolor=ft.Colors.RED_800)
+        page.overlay.append(snack)
+        snack.open = True
+        load_data() # Refresh screen
 
-    action_bar = ft.Row(
-        alignment="spaceBetween",
-        controls=[
-            ft.TextField(
-                hint_text="Search",
-                hint_style=ft.TextStyle(color=TEXT_MUTED, size=13),
-                prefix_icon=ft.Icons.SEARCH,
-                bgcolor=INPUT_BG,
-                border_color=ft.Colors.TRANSPARENT,
-                border_radius=8,
-                content_padding=ft.Padding.symmetric(horizontal=14, vertical=10),
-                text_style=ft.TextStyle(color=TEXT_PRIMARY, size=13),
-                height=40,
-                width=300,
-            ),
-            ft.Container(
-                bgcolor=ACCENT,
-                border_radius=8,
-                padding=ft.Padding.symmetric(horizontal=16, vertical=10),
-                ink=True,
-                on_click=open_new_po_modal,
-                content=ft.Text(
-                    "New Purchase Order",
-                    size=13,
-                    weight="bold",
-                    color=PANEL_LEFT_BG, 
+    # --- Dynamic UI Loader ---
+    def load_data():
+        main_container.controls.clear() # Clear out old data
+        
+        # Fetch fresh POs from the DB
+        all_pos = purchase_order_model.get_purchase_orders()
+        
+        # Calculate Summary metrics
+        open_count = sum(1 for po in all_pos if po['po_status'] in ['Pending', 'Approved'])
+        pending_count = sum(1 for po in all_pos if po['po_status'] == 'Pending')
+        approved_count = sum(1 for po in all_pos if po['po_status'] == 'Approved')
+        received_count = sum(1 for po in all_pos if po['po_status'] == 'Received')
+
+        action_bar = ft.Row(
+            alignment="spaceBetween",
+            controls=[
+                ft.TextField(
+                    hint_text="Search",
+                    hint_style=ft.TextStyle(color=TEXT_MUTED, size=13),
+                    prefix_icon=ft.Icons.SEARCH,
+                    bgcolor=INPUT_BG,
+                    border_color=ft.Colors.TRANSPARENT,
+                    border_radius=8,
+                    content_padding=ft.Padding.symmetric(horizontal=14, vertical=10),
+                    text_style=ft.TextStyle(color=TEXT_PRIMARY, size=13),
+                    height=40,
+                    width=300,
+                ),
+                ft.Container(
+                    bgcolor=ACCENT,
+                    border_radius=8,
+                    padding=ft.Padding.symmetric(horizontal=16, vertical=10),
+                    ink=True,
+                    on_click=open_new_po_modal,
+                    content=ft.Text(
+                        "New Purchase Order",
+                        size=13,
+                        weight="bold",
+                        color=PANEL_LEFT_BG, 
+                    )
                 )
-            )
-        ]
-    )
-
-    po_list_controls = []
-    
-    if not all_pos:
-        po_list_controls.append(
-            ft.Container(
-                padding=40, 
-                alignment=ft.Alignment.CENTER, 
-                content=ft.Text("No Purchase Orders found. Create a new one to get started.", color=TEXT_MUTED)
-            )
+            ]
         )
-    else:
-        for po in all_pos:
-            items = po.get('items', [])
-            total_amount = sum(float(i['line_total']) for i in items)
-            items_count = len(items)
-            
-            # Create chips summarizing the ordered items
-            chips = []
-            for i in items:
-                # Eg: "Coffee Beans * 5 kg * P500.00"
-                chips.append(f"{i['item_name']} * {float(i['ordered_quantity']):g} * P{float(i['unit_cost']):,.2f}")
-                
+
+        po_list_controls = []
+        
+        if not all_pos:
             po_list_controls.append(
-                _po_list_item(
-                    po_num=f"PO-{po['po_id']:04d}",
-                    status=po['po_status'],
-                    supplier=po['supplier_name'] or "Unknown",
-                    date_created=format_date(po['po_date']),
-                    expected_date=format_date(po['expected_delivery_date']),
-                    amount=f"P {total_amount:,.2f}",
-                    items_count=str(items_count),
-                    chips=chips
+                ft.Container(
+                    padding=40, 
+                    alignment=ft.Alignment.CENTER, 
+                    content=ft.Text("No Purchase Orders found. Create a new one to get started.", color=TEXT_MUTED)
                 )
             )
+        else:
+            for po in all_pos:
+                items = po.get('items', [])
+                total_amount = sum(float(i['line_total']) for i in items)
+                items_count = len(items)
+                
+                # Create chips summarizing the ordered items
+                chips = []
+                for i in items:
+                    chips.append(f"{i['item_name']} * {float(i['ordered_quantity']):g} * P{float(i['unit_cost']):,.2f}")
+                    
+                po_list_controls.append(
+                    _po_list_item(
+                        po_num=f"PO-{po['po_id']:04d}",
+                        status=po['po_status'],
+                        supplier=po['supplier_name'] or "Unknown",
+                        date_created=format_date(po['po_date']),
+                        expected_date=format_date(po['expected_delivery_date']),
+                        amount=f"P {total_amount:,.2f}",
+                        items_count=str(items_count),
+                        chips=chips,
+                        # Pass the handlers, ensuring we bind the specific po_id for this row
+                        on_approve=lambda e, pid=po['po_id']: handle_approve(pid),
+                        on_cancel=lambda e, pid=po['po_id']: handle_cancel(pid)
+                    )
+                )
 
-    return ft.Column(
-        expand=True,
-        scroll="auto",
-        spacing=30,
-        controls=[
+        # Repopulate the main container with the fresh components
+        main_container.controls.extend([
             # Header
             ft.Column(
                 spacing=4,
@@ -108,7 +129,6 @@ def AdminPurchaseOrders(page: ft.Page, open_new_po_modal):
                     ft.Text("Raise and track orders to your suppliers", size=12, color=TEXT_MUTED),
                 ]
             ),
-            
             # Summary Cards
             ft.Row(
                 spacing=20,
@@ -119,13 +139,18 @@ def AdminPurchaseOrders(page: ft.Page, open_new_po_modal):
                     _po_summary_card_small("Received", str(received_count)),
                 ]
             ),
-            
             action_bar,
-            
             # List of Purchase Orders
             ft.Column(
                 spacing=15,
                 controls=po_list_controls
             )
-        ]
-    )
+        ])
+        
+        # Tell Flet to redraw the updated container on the screen
+        page.update()
+
+    # Trigger the first data load when the view is initialized
+    load_data()
+    
+    return main_container

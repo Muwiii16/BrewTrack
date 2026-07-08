@@ -36,9 +36,10 @@ def _badge(text: str, bg_color: str, fg_color: str):
         )
     )
 
-def _po_list_item(po_num, status, supplier, date_created, expected_date, amount, items_count, chips: list):
-    status_bg = "#332400" if status == "Pending" else "#0A290A"
-    status_fg = ACCENT if status == "Pending" else "#4CAF50"
+def _po_list_item(po_num, status, supplier, date_created, expected_date, amount, items_count, chips: list, on_approve=None, on_cancel=None):
+    # Dynamic colors based on the actual PO status
+    status_bg = "#332400" if status == "Pending" else ("#330000" if status == "Cancelled" else "#0A290A")
+    status_fg = ACCENT if status == "Pending" else ("#F44336" if status == "Cancelled" else "#4CAF50")
     
     chip_controls = []
     for chip in chips:
@@ -50,6 +51,21 @@ def _po_list_item(po_num, status, supplier, date_created, expected_date, amount,
                 content=ft.Text(chip, size=11, color=TEXT_MUTED)
             )
         )
+        
+    menu_items = []
+    # Only show the Approve and Cancel options if the order is still Pending
+    if status == "Pending":
+        if on_approve:
+            menu_items.append(ft.PopupMenuItem(content=ft.Text("Approve", color="#4CAF50"), on_click=on_approve))
+        if on_cancel:
+            menu_items.append(ft.PopupMenuItem(content=ft.Text("Cancel Order", color="#F44336"), on_click=on_cancel))
+            
+    # Hide the 3-dot menu entirely if there are no actions available (e.g., already Approved/Cancelled)
+    actions_control = ft.PopupMenuButton(
+        icon=ft.Icons.MORE_HORIZ,
+        icon_color=TEXT_PRIMARY,
+        items=menu_items
+    ) if menu_items else ft.Container(width=40, height=40)
         
     return ft.Container(
         padding=20,
@@ -85,14 +101,7 @@ def _po_list_item(po_num, status, supplier, date_created, expected_date, amount,
                                 ft.Text(f"{items_count} line item(s)", size=12, color=TEXT_MUTED)
                             ]
                         ),
-                        ft.PopupMenuButton(
-                            icon=ft.Icons.MORE_HORIZ,
-                            icon_color=TEXT_PRIMARY,
-                            items=[
-                                ft.PopupMenuItem(content=ft.Text("Approve", color="#4CAF50")),
-                                ft.PopupMenuItem(content=ft.Text("Cancel Order", color="#F44336")),
-                            ]
-                        )
+                        actions_control
                     ]
                 )
             ]
