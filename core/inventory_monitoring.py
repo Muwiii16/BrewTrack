@@ -24,9 +24,7 @@ def nav_item(text, selected=False, on_nav=None):
 
 def build_sidebar(page: ft.Page, user, on_logout, current_page, on_nav):
     logo_block = ft.Column([
-        ft.Image(src='assets/BFC_logo.jpg', width=140, fit=ft.BoxFit.CONTAIN),
-        ft.Text('BrewTrack', size=22, color=TEXT_PRIMARY,
-                weight=ft.FontWeight.BOLD),
+        ft.Image(src='assets/LOGO.png', width=319, fit=ft.BoxFit.CONTAIN, align=ft.Alignment.CENTER),
     ], spacing=6,)
 
     nav_column = ft.Column([
@@ -55,7 +53,7 @@ def build_sidebar(page: ft.Page, user, on_logout, current_page, on_nav):
         ft.Container(height=12),
         nav_section_label("Insights"),
         nav_item("Reports", selected=(current_page == "Reports"), on_nav=on_nav),
-    ], spacing=4, scroll=ft.ScrollMode.AUTO, expand=True,)
+    ], spacing=2, scroll=ft.ScrollMode.AUTO, expand=True,)
 
     profile_block = ft.Row([
         ft.Icon(ft.Icons.ACCOUNT_CIRCLE_ROUNDED,
@@ -64,7 +62,10 @@ def build_sidebar(page: ft.Page, user, on_logout, current_page, on_nav):
             ft.Text(user["full_name"], size=13, color=TEXT_PRIMARY,
                     weight=ft.FontWeight.BOLD),
             ft.Text(user["role"], size=11, color=TEXT_SECONDARY),
-        ], spacing=0)
+        ], spacing=0),
+        ft.Container(expand=True),  # spacer
+        ft.IconButton(ft.Icons.LOGOUT_ROUNDED, icon_color=ACCENT_GOLD, 
+                on_click=lambda e: on_logout(), alignment=ft.Alignment.CENTER_RIGHT),
     ], spacing=8,)
 
     return ft.Container(
@@ -82,8 +83,8 @@ def build_sidebar(page: ft.Page, user, on_logout, current_page, on_nav):
 
 def build_header():
     breadcrumb = ft.Row([
-        ft.Icon(ft.Icons.GRID_VIEW_ROUNDED, size=18, color=TEXT_SECONDARY),
-        ft.Text("Inventory Monitoring", size=14, color=TEXT_SECONDARY),
+        ft.Icon(ft.Icons.GRID_VIEW_ROUNDED, size=18, color=TEXT_PRIMARY),
+        ft.Text("Inventory Monitoring", size=14, color=TEXT_PRIMARY),
     ], spacing=4,)
 
     title = ft.Text("Inventory Monitoring", size=28, color=TEXT_PRIMARY,

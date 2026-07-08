@@ -16,8 +16,8 @@ class BrewTrackApp:
         self.page.bgcolor = BG_COLOR
         self.page.theme_mode = ft.ThemeMode.DARK
         self.page.padding = 0
-
         self.page.window.maximized = True
+        #self.page.window.full_screen = True
 
         self.user = None  # holds the logged-in user's row (dict) once authenticated
  
@@ -55,8 +55,17 @@ class BrewTrackApp:
             
         elif page_name == "Movement History":
             self.page.add(movement_history_view(self.page, self.user, self.show_login, self.navigate_to))
-        """"   
-        elif page_name == "Ingredients & Supplies":
+        """
+        elif page_name == "Recieving/ Stock-In":
+            self.page.add(ingredients_supply_view(self.page, self.user, self.show_login, self.navigate_to))
+            
+        elif page_name == "Usage/ Stock-Out":
+            self.page.add(ingredients_supply_view(self.page, self.user, self.show_login, self.navigate_to))
+        
+        elif page_name == "Daily Sales":
+            self.page.add(ingredients_supply_view(self.page, self.user, self.show_login, self.navigate_to))
+            
+        elif page_name == "Reports":
             self.page.add(ingredients_supply_view(self.page, self.user, self.show_login, self.navigate_to))
         """
         self.page.update()

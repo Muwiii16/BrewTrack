@@ -20,13 +20,10 @@ PANEL_LEFT_BG = "#0D0D0D"
 PANEL_RIGHT_BG = "#1F1F1F"
  
 
- 
+COFFEE_BG_COLOR = "#241C18"    # background for the whole login page (behind the card) colored dark brown suitable for a coffee theme
 # Inputs
 INPUT_BG = "#2A2A2A"
 INPUT_BORDER = "#3A3A3A"
- 
-# Social circles
-SOCIAL_BG = "#333333"
  
 # Fonts
 FONT_HEADING = "Georgia"

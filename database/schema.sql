@@ -187,3 +187,4 @@ CREATE INDEX idx_item_category ON ingredients_supplies(category);
 CREATE INDEX idx_po_status ON purchase_orders(po_status);
 CREATE INDEX idx_movement_date ON inventory_movements(movement_date);
 CREATE INDEX idx_sales_date ON sales_stock_out(sales_date);
+

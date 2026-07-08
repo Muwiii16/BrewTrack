@@ -25,9 +25,7 @@ def nav_item(text, selected=False, on_nav=None):
 
 def build_sidebar(page: ft.Page, user, on_logout, current_page, on_nav):
     logo_block = ft.Column([
-        ft.Image(src='assets/BFC_logo.jpg', width=140, fit=ft.BoxFit.CONTAIN),
-        ft.Text('BrewTrack', size=22, color=TEXT_PRIMARY,
-                weight=ft.FontWeight.BOLD),
+        ft.Image(src='assets/LOGO.png', width=319, fit=ft.BoxFit.CONTAIN, align=ft.Alignment.CENTER),
     ], spacing=6,)
 
     nav_column = ft.Column([
@@ -57,6 +55,7 @@ def build_sidebar(page: ft.Page, user, on_logout, current_page, on_nav):
         nav_section_label("Insights"),
         nav_item("Reports", selected=(current_page == "Reports"), on_nav=on_nav),
     ], spacing=2, scroll=ft.ScrollMode.AUTO, expand=True,)
+
 
     profile_block = ft.Row([
         ft.Icon(ft.Icons.ACCOUNT_CIRCLE_ROUNDED,
@@ -271,7 +270,7 @@ def build_ingredients_supply_table():
 
 
 def ingredients_supply_view(page: ft.Page, user, on_logout, on_nav):
-    sidebar = build_sidebar(page, user, on_logout, "Ingredients Supply", on_nav)
+    sidebar = build_sidebar(page, user, on_logout, "Ingredients & Supplies", on_nav)
 
     header = build_header()
     search_bar = build_search_bar()

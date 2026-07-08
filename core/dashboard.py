@@ -31,9 +31,7 @@ def nav_item(text, selected=False, on_nav=None):
 
 def build_sidebar(page: ft.Page, user, on_logout, current_page, on_nav):
     logo_block = ft.Column([
-        ft.Image(src='assets/BFC_logo.jpg', width=140, fit=ft.BoxFit.CONTAIN),
-        ft.Text('BrewTrack', size=22, color=TEXT_PRIMARY,
-                weight=ft.FontWeight.BOLD),
+        ft.Image(src='assets/LOGO.png', width=319, fit=ft.BoxFit.CONTAIN, align=ft.Alignment.CENTER),
     ], spacing=6,)
 
     nav_column = ft.Column([
@@ -92,7 +90,7 @@ def build_sidebar(page: ft.Page, user, on_logout, current_page, on_nav):
 
 def build_header(user_name):
     breadcrumb = ft.Row([
-        ft.Icon(ft.Icons.GRID_VIEW_ROUNDED, size=18, color=TEXT_SECONDARY),
+        ft.Icon(ft.Icons.GRID_VIEW_ROUNDED, size=18, color=TEXT_PRIMARY),
         ft.Text("Dashboard", size=14, color=TEXT_PRIMARY),
     ], spacing=4,)
 
@@ -338,10 +336,29 @@ def dashboard_view(page: ft.Page, user, on_logout, on_nav):
         [low_stock_card, movements_card],
         spacing=16,
     )
+    
+    header_block = ft.Container(
+        content=header, 
+        padding=ft.Padding.only(bottom=20), 
+        border=ft.Border.only(bottom=ft.BorderSide(1, BORDER_COLOR))
+    )
+
+    main_block = ft.Container(
+        content=ft.Column(
+            [stats_row, cards_row, po_bar], 
+            spacing=20, 
+            scroll=ft.ScrollMode.AUTO, 
+        ),
+        expand=True, 
+        bgcolor=INPUT_BG, 
+        padding=ft.Padding.only(top=20),
+    )
 
     main_content = ft.Container(
-        content=ft.Column([
-            header, stats_row, cards_row, po_bar], spacing=20, scroll=ft.ScrollMode.AUTO,),
+        content=ft.Column(
+            [header_block, main_block], 
+            spacing=0,
+        ),
         expand=True,
         padding=24,
     )
