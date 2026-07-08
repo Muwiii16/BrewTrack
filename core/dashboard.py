@@ -7,20 +7,32 @@ def nav_section_label(text):
     return ft.Text(text.upper(), size=11, color=TEXT_SECONDARY, weight=ft.FontWeight.BOLD)
 
 
-def nav_item(text, selected=False):
-    """A single sidebar nav link. Bold+White if selected, muted gray otherwise."""
-    return ft.Text(text, size=13, color=TEXT_PRIMARY if selected else TEXT_SECONDARY, weight=ft.FontWeight.NORMAL,)
+def nav_item(text, selected=False, on_nav=None):
+    """A single sidebar nav link. Bold+white if selected, gray otherwise."""
+    return ft.Container(
+        content=ft.Text(
+            text,
+            size=13,
+            color=TEXT_PRIMARY if selected else TEXT_SECONDARY,
+            weight=ft.FontWeight.NORMAL,
+        ),
+        on_click=lambda e: on_nav(text) if on_nav else None,
+        padding=ft.Padding.symmetric(vertical=6, horizontal=12),
+        border_radius=6,
+        ink=True,
+    )
 
 
-def build_sidebar(page: ft.Page, role='admin', active_page='Dashboard', user_name='Marco Reyes', user_role_label='Staff'):
-
+def build_sidebar(page: ft.Page, user, on_logout, current_page, on_nav):
     logo_block = ft.Column([
         ft.Image(src='assets/BFC_logo.jpg', width=140, fit=ft.BoxFit.CONTAIN),
         ft.Text('BrewTrack', size=22, color=TEXT_PRIMARY,
                 weight=ft.FontWeight.BOLD),
     ], spacing=6,)
 
-    if role == 'staff':
+    is_staff = user["role"].lower() == "staff"
+
+    if is_staff:
         nav_groups = [
             ("Overview", ["Dashboard"]),
             ("Operations", ["Inventory Monitoring",
@@ -32,7 +44,7 @@ def build_sidebar(page: ft.Page, role='admin', active_page='Dashboard', user_nam
         nav_groups = [
             ("Overview", ["Dashboard"]),
             ("Master Records", ["User Management",
-             "Suppliers", "Ingredients & Supplies"]),
+             "Supplier Management", "Ingredients & Supplies"]),
             ("Operations", ["Inventory Monitoring", "Low-Stock Alerts",
              "Purchase Orders", "Movement History"]),
             ("Transactions", ["Receiving/Stock-In",
@@ -44,36 +56,36 @@ def build_sidebar(page: ft.Page, role='admin', active_page='Dashboard', user_nam
     for label, items in nav_groups:
         nav_children.append(nav_section_label(label))
         for item in items:
-            nav_children.append(nav_item(item, selected=(item == active_page)))
+            nav_children.append(nav_item(item, selected=(
+                current_page == item), on_nav=on_nav))
         nav_children.append(ft.Container(height=12))
 
-    nav_column = ft.Column(nav_children, spacing=10,
+    nav_column = ft.Column(nav_children, spacing=2,
                            scroll=ft.ScrollMode.AUTO, expand=True,)
 
     profile_block = ft.Row([
         ft.Icon(ft.Icons.ACCOUNT_CIRCLE_ROUNDED,
                 size=36, color=TEXT_SECONDARY),
         ft.Column([
-            ft.Text(user_name, size=13, color=TEXT_PRIMARY,
-                    weight=ft.FontWeight.BOLD),
-            ft.Text(user_role_label, size=11, color=TEXT_SECONDARY),
-        ], spacing=0)
+            ft.Text(user["full_name"], size=13,
+                    color=TEXT_PRIMARY, weight=ft.FontWeight.BOLD),
+            ft.Text(user["role"], size=11, color=TEXT_SECONDARY),
+        ], spacing=0),
+        ft.Container(expand=True),
+        ft.IconButton(ft.Icons.LOGOUT_ROUNDED, icon_color=ACCENT_GOLD,
+                      on_click=lambda e: on_logout(), alignment=ft.Alignment.CENTER_RIGHT),
     ], spacing=8,)
 
     return ft.Container(
-        content=ft.Column([
-            logo_block,
-            ft.Container(height=20),
-            nav_column,
-            profile_block,
-        ], expand=True,),
+        content=ft.Column([logo_block, ft.Container(
+            height=20), nav_column, profile_block], expand=True,),
         width=260,
         bgcolor=SIDEBAR_COLOR,
         padding=20,
     )
 
 
-def build_header(user_name="Juan"):
+def build_header(user_name):
     breadcrumb = ft.Row([
         ft.Icon(ft.Icons.GRID_VIEW_ROUNDED, size=18, color=TEXT_SECONDARY),
         ft.Text("Dashboard", size=14, color=TEXT_PRIMARY),
@@ -302,11 +314,10 @@ def build_purchase_orders_bar():
     )
 
 
-def dashboard_view(page: ft.Page):
-    sidebar = build_sidebar(page, role="staff", active_page="Dashboard",
-                            user_name="Marco Reyes", user_role_label="Staff")
+def dashboard_view(page: ft.Page, user, on_logout, on_nav):
+    sidebar = build_sidebar(page, user, on_logout, "Dashboard", on_nav)
 
-    header = build_header('Juan')
+    header = build_header(user["full_name"])
     stats_row = build_stats_row()
     low_stock_card = build_low_stock_card()
     movements_card = build_movements_card()

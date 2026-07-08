@@ -1,18 +1,63 @@
 import flet as ft
+
 from core.theme import *
 from core.login import login_view
 from core.dashboard import dashboard_view
+from core.staff_dashboard import staff_dashboard_view
+from core.inventory_monitoring import inventory_monitoring_view
+
+
+class BrewTrackApp:
+    def __init__(self, page: ft.Page):
+        self.page = page
+        self.page.title = "BrewTrack"
+        self.page.bgcolor = BG_COLOR
+        self.page.theme_mode = ft.ThemeMode.DARK
+        self.page.padding = 0
+
+        self.page.window.maximized = True
+
+        self.user = None  # holds the logged-in user's dict once authenticated
+
+        self.show_login()  # start at the login screen
+
+    def show_login(self):
+        self.user = None
+        self.page.clean()
+        self.page.add(login_view(
+            self.page, on_login_success=self.show_dashboard))
+
+    def show_dashboard(self, user):
+        """Called by login_view once login succeeds (real or fake)."""
+        self.user = user
+        self.page.clean()
+        if user["role"].lower() == "staff":
+            self.navigate_to("Staff Dashboard")
+        else:
+            self.navigate_to("Dashboard")
+
+    def navigate_to(self, page_name):
+        """The central router. Clears the screen and loads the requested page."""
+        self.page.clean()
+
+        if page_name == "Dashboard":
+            self.page.add(dashboard_view(self.page, self.user,
+                          self.show_login, self.navigate_to))
+
+        elif page_name == "Staff Dashboard":
+            self.page.add(staff_dashboard_view(self.page, self.user,
+                          self.show_login, self.navigate_to))
+
+        elif page_name == "Inventory Monitoring":
+            self.page.add(inventory_monitoring_view(self.page, self.user,
+                          self.show_login, self.navigate_to))
+
+        self.page.update()
 
 
 def main(page: ft.Page):
-    page.title = "BrewTrack"
-    page.bgcolor = BG_COLOR
-    page.theme_mode = ft.ThemeMode.DARK
-    page.padding = 0
-
-    page.window.maximized = True
-
-    page.add(dashboard_view(page))
+    BrewTrackApp(page)
 
 
-ft.app(target=main, assets_dir='assets')
+if __name__ == "__main__":
+    ft.run(main, assets_dir="assets")
