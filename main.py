@@ -1,7 +1,7 @@
 import flet as ft
 from core.theme import *
 from core.login import login_view
-from core.dashboard import dashboard_view
+from core.admin_overview import dashboard_view
 
 def main(page: ft.Page):
     page.title = "BrewTrack"
