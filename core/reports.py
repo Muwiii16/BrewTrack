@@ -85,25 +85,10 @@ def report_panel(title, subtitle, chart_control):
     )
 
 
-def build_detailed_reports_bar(on_view_reports=None):
-    return ft.Container(
-        content=ft.Row([
-            ft.Text("Detailed\nReports", size=22, color=TEXT_PRIMARY, weight=ft.FontWeight.BOLD),
-            ft.Column([
-                ft.Text("Browse each report by category", size=13, color=TEXT_SECONDARY),
-                ft.ElevatedButton(
-                    "View Reports", bgcolor=ACCENT_GOLD, color="#000000", width=200, height=44,
-                    on_click=(lambda e: on_view_reports()) if on_view_reports else None,
-                ),
-            ], spacing=10),
-        ], alignment=ft.MainAxisAlignment.START, spacing=60, vertical_alignment=ft.CrossAxisAlignment.CENTER),
-        border=ft.Border.all(1, BORDER_COLOR),
-        border_radius=6,
-        padding=20,
-    )
 
 
-def reports_view(page: ft.Page, user, on_logout, on_nav, on_view_reports=None):
+
+def reports_view(page: ft.Page, user, on_logout, on_nav):
     sidebar = build_sidebar(page, user, on_logout, "Reports", on_nav)
 
     inventory_value = inventory_model.get_inventory_overview()
@@ -135,7 +120,8 @@ def reports_view(page: ft.Page, user, on_logout, on_nav, on_view_reports=None):
 
     main_content = ft.Container(
         content=ft.Column(
-            [build_header(), stats_row, charts_row, build_detailed_reports_bar(on_view_reports)],
+            [build_header(), stats_row, charts_row],
+        #build_detailed_reports_bar(on_view_reports
             spacing=20, scroll=ft.ScrollMode.AUTO,
         ),
         expand=True, padding=24,
