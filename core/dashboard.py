@@ -47,14 +47,14 @@ def build_sidebar(page: ft.Page, user, on_logout, current_page, on_nav):
         ft.Container(height=12),
         nav_section_label("Operations"),
         nav_item("Inventory Monitoring", selected=(current_page == "Inventory Monitoring"), on_nav=on_nav),
-        nav_item("Low-Stock Alerts", selected=(current_page == "Low-Stock Alerts"), on_nav=on_nav),
+        nav_item("Low-Stock Items", selected=(current_page == "Low-Stock Items"), on_nav=on_nav),
         nav_item("Purchase Orders", selected=(current_page == "Purchase Orders"), on_nav=on_nav),
         nav_item("Movement History", selected=(current_page == "Movement History"), on_nav=on_nav),
 
         ft.Container(height=12),
         nav_section_label("Transactions"),
         nav_item("Receiving/Stock-In", selected=(current_page == "Receiving/Stock-In"), on_nav=on_nav),
-        nav_item("Stock-Out/Usage", selected=(current_page == "Stock-Out/Usage"), on_nav=on_nav),
+        nav_item("Usage/Stock-Out", selected=(current_page == "Usage/Stock-Out"), on_nav=on_nav),
         nav_item("Daily Sales", selected=(current_page == "Daily Sales"), on_nav=on_nav),
 
         ft.Container(height=12),

@@ -48,7 +48,7 @@ def build_sidebar(page: ft.Page, user, on_logout, current_page, on_nav):
         ft.Container(height=12),
         nav_section_label("Transactions"),
         nav_item("Receiving/Stock-In", selected=(current_page == "Receiving/Stock-In"), on_nav=on_nav),
-        nav_item("Stock-Out/Usage", selected=(current_page == "Stock-Out/Usage"), on_nav=on_nav),
+        nav_item("Usage/Stock-Out", selected=(current_page == "Usage/Stock-Out"), on_nav=on_nav),
         nav_item("Daily Sales", selected=(current_page == "Daily Sales"), on_nav=on_nav),
 
         ft.Container(height=12),

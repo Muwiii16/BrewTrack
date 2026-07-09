@@ -1,6 +1,12 @@
 import flet as ft
+from core.daily_sales import daily_sales_view
 from core.inventory_monitoring import inventory_monitoring_view
+from core.low_stock import low_stock_view
+from core.purchase_order import purchase_order_view
+from core.reports import reports_view
+from core.stock_in import receiving_stock_in_view
 from core.stock_movement import movement_history_view
+from core.stock_out import stock_out_usage_view
 from core.theme import *
 from core.login import login_view
 from core.dashboard import dashboard_view
@@ -52,22 +58,28 @@ class BrewTrackApp:
            
         elif page_name == "Inventory Monitoring":
             self.page.add(inventory_monitoring_view(self.page, self.user, self.show_login, self.navigate_to))
+        
+        elif page_name == "Low-Stock Items":
+            self.page.add(low_stock_view(self.page, self.user, self.show_login, self.navigate_to))
+        
+        elif page_name == "Purchase Orders":
+            self.page.add(purchase_order_view(self.page, self.user, self.show_login, self.navigate_to))
             
         elif page_name == "Movement History":
             self.page.add(movement_history_view(self.page, self.user, self.show_login, self.navigate_to))
-        """
-        elif page_name == "Recieving/ Stock-In":
-            self.page.add(ingredients_supply_view(self.page, self.user, self.show_login, self.navigate_to))
+        
+        elif page_name == "Receiving/Stock-In":
+            self.page.add(receiving_stock_in_view(self.page, self.user, self.show_login, self.navigate_to))
             
-        elif page_name == "Usage/ Stock-Out":
-            self.page.add(ingredients_supply_view(self.page, self.user, self.show_login, self.navigate_to))
+        elif page_name == "Usage/Stock-Out":
+            self.page.add(stock_out_usage_view(self.page, self.user, self.show_login, self.navigate_to))
         
         elif page_name == "Daily Sales":
-            self.page.add(ingredients_supply_view(self.page, self.user, self.show_login, self.navigate_to))
-            
+            self.page.add(daily_sales_view(self.page, self.user, self.show_login, self.navigate_to))
+        
         elif page_name == "Reports":
-            self.page.add(ingredients_supply_view(self.page, self.user, self.show_login, self.navigate_to))
-        """
+            self.page.add(reports_view(self.page, self.user, self.show_login, self.navigate_to))
+
         self.page.update()
         
 def main(page: ft.Page):
