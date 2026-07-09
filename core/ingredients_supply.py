@@ -43,7 +43,7 @@ def ingredients_supply_view(page: ft.Page, user=None, show_login=None, global_na
                     controls=[
                         _sidebar_section_title("Overview"), _sidebar_link("Dashboard"),
                         _sidebar_section_title("Master Records"), _sidebar_link("User Management"), _sidebar_link("Suppliers"), _sidebar_link("Ingredients & Supplies"),
-                        _sidebar_section_title("Operations"), _sidebar_link("Inventory Monitoring"), _sidebar_link("Low-Stock Items"), _sidebar_link("Purchase Orders"), _sidebar_link("Movement History"),
+                        _sidebar_section_title("Operations"), _sidebar_link("Inventory Monitoring"), _sidebar_link("Low-Stock Alerts"), _sidebar_link("Purchase Orders"), _sidebar_link("Movement History"),
                         _sidebar_section_title("Transactions"), _sidebar_link("Receiving/ Stock-In"), _sidebar_link("Stock-Out/ Usage"), _sidebar_link("Daily Sales"),
                         _sidebar_section_title("Insights"), _sidebar_link("Reports"),
                     ]
