@@ -159,6 +159,7 @@ def _panel_container(title: str, content_controls: list):
     )
 
 def _low_stock_row(item_name: str, desc: str):
+    
     return ft.Container(
         padding=15,
         border=ft.Border.all(1, CARD_BORDER),

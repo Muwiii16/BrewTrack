@@ -89,7 +89,7 @@ def staff_movement_history_view(page: ft.Page, user=None, show_login=None, globa
                 badge_bg, badge_fg = "#002b2b", "#00BCD4"
                 qty_str = f"- {float(mov['quantity']):g}"
                 qty_color = "#00BCD4"
-            else: # Stock-Out
+            elif m_type == "Stock-Out": # Stock-Out
                 badge_bg, badge_fg = "#332400", ACCENT
                 qty_str = f"- {float(mov['quantity']):g}"
                 qty_color = ACCENT

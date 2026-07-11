@@ -89,8 +89,8 @@ def AdminOverview(page: ft.Page):
         elif m_type == "Sale":
             bg, fg = "#002b2b", "#00BCD4"
             qty = f"- {qty_val:g} units"
-        else: # Stock-Out
-            bg, fg = "#332400", ACCENT
+        elif m_type == "Stock-Out": # Stock-Out
+            bg, fg = "#332400", "#ef4444"
             qty = f"- {qty_val:g} units"
             
         try:

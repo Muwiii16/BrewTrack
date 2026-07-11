@@ -10,6 +10,9 @@ from models.ingredient_model import add_ingredient
 from models.inventory_model import stock_in
 from models.purchase_order_model import create_purchase_order
 
+# --- NEW IMPORT ---
+from models.product_model import add_product 
+
 def seed_database():
     print("=== BrewTrack Realistic Database Seeder ===")
     
@@ -20,7 +23,8 @@ def seed_database():
         
         if not admin:
             print("Creating default Admin user...")
-            add_user("John Edgar Emmanuel Perez", "admin@brewtrack.com", "admin", "admin_password123", "Owner/ Admin", "09123456789")
+            add_user("Admin", "admin@brewtrack.com", "admin", "admin", "Owner/ Admin", "09123456789")
+            add_user("Staff", "staff@brewtrack.com", "staff", "staff", "Staff", "09222122222")
             admin = get_users()[-1] # Fetch the newly created user
         
         user_id = admin['user_id']
@@ -92,6 +96,19 @@ def seed_database():
         ]
         # Create a pending order for Sweet Syrups Inc.
         create_purchase_order(suppliers["Sweet Syrups Inc."], user_id, "2026-07-15", po_items)
+
+        # --- 6. MENU PRODUCTS ---
+        print("Seeding Products Menu...")
+        menu_items = [
+            {"name": "Espresso", "price": 100.00},
+            {"name": "Matcha Latte", "price": 180.00},
+            {"name": "Spanish Latte", "price": 160.00},
+            {"name": "Caramel Macchiato", "price": 160.00},
+        ]
+        
+        for product in menu_items:
+            add_product(product["name"], product["price"])
+            print(f"  -> Added {product['name']} at ₱{product['price']:.2f}")
 
         print("✅ Success! Database fully populated with realistic BFC Menu data!")
 

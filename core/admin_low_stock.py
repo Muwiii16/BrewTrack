@@ -64,7 +64,7 @@ def AdminLowStock(page: ft.Page, open_new_po_modal):
         shortage = max(ro_level - curr_qty, 0)
         suggested_qty = max(shortage, ro_level)
         
-        is_out = (curr_qty <= 0)
+        is_out = (curr_qty == 0)
         status_text = "Out of Stock" if is_out else "Low"
         status_bg = "#330000" if is_out else "#332400"
         status_fg = "#F44336" if is_out else ACCENT

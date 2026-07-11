@@ -6,13 +6,19 @@ from datetime import datetime
 
 def DailySales(page: ft.Page, user=None, show_login=None, global_navigate_to=None):
     
-    # --- SIDEBAR CONFIGURATION ---
+    # --- 1. STATE MANAGEMENT ---
+    state = {
+        "selected_id": None, 
+        "queue": []
+    }
+
+    # --- 2. SIDEBAR CONFIGURATION ---
     sidebar_container = ft.Container(
-        width=240, bgcolor=PANEL_LEFT_BG, padding=ft.Padding.symmetric(vertical=20, horizontal=20),
-        border=ft.Border(right=ft.BorderSide(1, CARD_BORDER))
+        width=240, 
+        bgcolor=PANEL_LEFT_BG, 
+        padding=ft.Padding.symmetric(vertical=20, horizontal=20),
+        border=ft.Border.only(right=ft.border.BorderSide(1, CARD_BORDER))
     )
-    
-    main_content = ft.Container(expand=True, padding=40, bgcolor=BG_COLOR)
 
     def navigate_to(e, view_name):
         if global_navigate_to:
@@ -25,23 +31,35 @@ def DailySales(page: ft.Page, user=None, show_login=None, global_navigate_to=Non
         def _sidebar_link(title: str):
             is_active = (title == active_view)
             return ft.Container(
-                padding=ft.Padding.symmetric(vertical=6, horizontal=10), border_radius=6,
-                bgcolor="#1A1A1A" if is_active else ft.Colors.TRANSPARENT, ink=True,
+                padding=ft.Padding.symmetric(vertical=6, horizontal=10), 
+                border_radius=6,
+                bgcolor="#1A1A1A" if is_active else ft.Colors.TRANSPARENT, 
+                ink=True,
                 on_click=lambda e: navigate_to(e, title),
-                content=ft.Text(title, size=13, color=TEXT_PRIMARY if is_active else "#CCCCCC", weight="bold" if is_active else "normal"),
+                content=ft.Text(
+                    title, 
+                    size=13, 
+                    color=TEXT_PRIMARY if is_active else "#CCCCCC", 
+                    weight="bold" if is_active else "normal"
+                ),
             )
 
         return ft.Column(
             expand=True,
             controls=[
+                # Logo Area
                 ft.Column(spacing=2, controls=[
                     ft.Icon(ft.Icons.COFFEE, size=24, color=ACCENT),
                     ft.Text("BUT FIRST, COFFEE", size=10, weight="bold", color=ACCENT, style=ft.TextStyle(letter_spacing=1.5)),
                     ft.Text("BREWTRACK", size=22, weight="bold", color=TEXT_PRIMARY, font_family=FONT_HEADING),
                 ]),
                 ft.Divider(height=30, color=CARD_BORDER),
+                
+                # Navigation Links
                 ft.Column(
-                    expand=True, spacing=2, scroll="hidden",
+                    expand=True, 
+                    spacing=2, 
+                    scroll=ft.ScrollMode.HIDDEN,
                     controls=[
                         _sidebar_section_title("Overview"), _sidebar_link("Dashboard"),
                         _sidebar_section_title("Master Records"), _sidebar_link("User Management"), _sidebar_link("Suppliers"), _sidebar_link("Ingredients & Supplies"),
@@ -51,19 +69,31 @@ def DailySales(page: ft.Page, user=None, show_login=None, global_navigate_to=Non
                     ]
                 ),
                 ft.Divider(height=20, color=CARD_BORDER),
+                
+                # User Profile & Logout
                 ft.Row(
-                    alignment="spaceBetween",
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     controls=[
                         ft.Row(spacing=12, controls=[
                             ft.CircleAvatar(bgcolor=TEXT_PRIMARY, color=PANEL_LEFT_BG, radius=18, content=ft.Icon(ft.Icons.PERSON, size=20)),
-                            ft.Column(spacing=0, controls=[ft.Text(user_name, size=13, weight="bold", color=TEXT_PRIMARY), ft.Text(user_role, size=11, color=TEXT_MUTED)])
+                            ft.Column(spacing=0, controls=[
+                                ft.Text(user_name, size=13, weight="bold", color=TEXT_PRIMARY), 
+                                ft.Text(user_role, size=11, color=TEXT_MUTED)
+                            ])
                         ]),
-                        ft.IconButton(icon=ft.Icons.LOGOUT, icon_color=ACCENT, icon_size=20, tooltip="Log Out", on_click=lambda e: show_login() if show_login else None)
+                        ft.IconButton(
+                            icon=ft.Icons.LOGOUT, 
+                            icon_color=ACCENT, 
+                            icon_size=20, 
+                            tooltip="Log Out", 
+                            on_click=lambda e: show_login() if show_login else None
+                        )
                     ]
                 )
             ]
         )
 
+    # --- 3. DATA FETCHING & CALCULATIONS ---
     try:
         raw_sales_data = sales_model.get_recent_sales(limit=100)
     except Exception:
@@ -83,14 +113,19 @@ def DailySales(page: ft.Page, user=None, show_login=None, global_navigate_to=Non
         ]
     )
 
-    state = {"selected_id": None, "queue": []}
+    # Populate state queue
     for i, s in enumerate(raw_sales_data[:15]): 
         state["queue"].append({
-            "id": f"SO-{1008 + i}", "product_name": s['product_name'], "qty": s['quantity_sold'],
-            "total": float(s['line_total']), "date": s['sales_date'].strftime("%b %d, %I:%M %p"), "cashier": s['full_name']
+            "id": f"SO-{1008 + i}", 
+            "product_name": s['product_name'], 
+            "qty": s['quantity_sold'],
+            "total": float(s['line_total']), 
+            "date": s['sales_date'].strftime("%b %d, %I:%M %p"), 
+            "cashier": s['full_name']
         })
 
-    left_panel_content = ft.Column(spacing=10, scroll="auto")
+    # --- 4. PANELS & UI LOGIC ---
+    left_panel_content = ft.Column(spacing=10, scroll=ft.ScrollMode.AUTO)
     right_panel_content = ft.Column(spacing=15)
     
     def select_order(order_id):
@@ -106,45 +141,101 @@ def DailySales(page: ft.Page, user=None, show_login=None, global_navigate_to=Non
         refresh_panels()
 
     def refresh_panels():
+        # Update Left Panel
         left_panel_content.controls.clear()
         if not state["queue"]:
-            left_panel_content.controls.append(ft.Container(padding=20, content=ft.Text("No pending sales orders.", color=TEXT_MUTED)))
+            left_panel_content.controls.append(
+                ft.Container(padding=20, content=ft.Text("No pending sales orders.", color=TEXT_MUTED))
+            )
             
         for order in state["queue"]:
             is_selected = (state["selected_id"] == order["id"])
+            border_color = ACCENT if is_selected else CARD_BORDER
+            
             card = ft.Container(
-                padding=15, border_radius=8, bgcolor="#1A1A1A" if not is_selected else "#2A2A2A",
-                border=ft.Border(top=ft.BorderSide(1, ACCENT if is_selected else CARD_BORDER), bottom=ft.BorderSide(1, ACCENT if is_selected else CARD_BORDER), left=ft.BorderSide(1, ACCENT if is_selected else CARD_BORDER), right=ft.BorderSide(1, ACCENT if is_selected else CARD_BORDER)),
-                ink=True, on_click=lambda e, oid=order["id"]: select_order(oid),
+                padding=15, 
+                border_radius=8, 
+                bgcolor="#2A2A2A" if is_selected else "#1A1A1A",
+                border=ft.Border.all(1, border_color),
+                ink=True, 
+                on_click=lambda e, oid=order["id"]: select_order(oid),
                 content=ft.Row(
-                    alignment="spaceBetween",
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     controls=[
-                        ft.Column(spacing=4, controls=[ft.Text(order["id"], size=16, weight="bold", color=TEXT_PRIMARY), ft.Text(f"Purchased {order['date']}", size=11, color=TEXT_MUTED)]),
-                        ft.Container(padding=8, border_radius=16, border=ft.Border(top=ft.BorderSide(1, CARD_BORDER), bottom=ft.BorderSide(1, CARD_BORDER), left=ft.BorderSide(1, CARD_BORDER), right=ft.BorderSide(1, CARD_BORDER)), content=ft.Text(f"{order['qty']} Order/s", size=11, color=TEXT_MUTED))
+                        ft.Column(spacing=4, controls=[
+                            ft.Text(order["id"], size=16, weight="bold", color=TEXT_PRIMARY), 
+                            ft.Text(f"Purchased {order['date']}", size=11, color=TEXT_MUTED)
+                        ]),
+                        ft.Container(
+                            padding=8, 
+                            border_radius=16, 
+                            border=ft.Border.all(1, CARD_BORDER), 
+                            content=ft.Text(f"{order['qty']} Order/s", size=11, color=TEXT_MUTED)
+                        )
                     ]
                 )
             )
             left_panel_content.controls.append(card)
 
+        # Update Right Panel
         right_panel_content.controls.clear()
         selected_order = next((o for o in state["queue"] if o["id"] == state["selected_id"]), None)
         
         if not selected_order:
-            right_panel_content.controls.append(ft.Container(expand=True, alignment=ft.Alignment.CENTER, padding=40, content=ft.Text("Select an order to verify.", color=TEXT_MUTED)))
+            right_panel_content.controls.append(
+                ft.Container(expand=True, alignment=ft.Alignment.CENTER, padding=40, content=ft.Text("Select an order to verify.", color=TEXT_MUTED))
+            )
         else:
             right_panel_content.controls.extend([
                 ft.Text("Verify", size=20, weight="bold", color=TEXT_PRIMARY),
                 ft.Container(
-                    padding=20, border_radius=8, border=ft.Border(top=ft.BorderSide(1, CARD_BORDER), bottom=ft.BorderSide(1, CARD_BORDER), left=ft.BorderSide(1, CARD_BORDER), right=ft.BorderSide(1, CARD_BORDER)),
-                    content=ft.Row(alignment="spaceBetween", controls=[ft.Column(spacing=4, controls=[ft.Text(selected_order["product_name"], size=16, weight="bold", color=TEXT_PRIMARY), ft.Text(f"x{selected_order['qty']}  |  Logged by {selected_order['cashier']}", size=13, color=TEXT_MUTED)]), ft.Text(f"P {selected_order['total']:,.2f}", size=16, weight="bold", color=TEXT_PRIMARY)])
+                    padding=20, 
+                    border_radius=8, 
+                    border=ft.Border.all(1, CARD_BORDER),
+                    content=ft.Row(
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN, 
+                        controls=[
+                            ft.Column(spacing=4, controls=[
+                                ft.Text(selected_order["product_name"], size=16, weight="bold", color=TEXT_PRIMARY), 
+                                ft.Text(f"x{selected_order['qty']}  |  Logged by {selected_order['cashier']}", size=13, color=TEXT_MUTED)
+                            ]), 
+                            ft.Text(f"P {selected_order['total']:,.2f}", size=16, weight="bold", color=TEXT_PRIMARY)
+                        ]
+                    )
                 ),
-                ft.Container(expand=True), 
-                ft.ElevatedButton(content=ft.Text("Verify Sales Order", weight="bold"), bgcolor=ACCENT, color=PANEL_LEFT_BG, style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=6), padding=15), width=float("inf"), on_click=verify_order)
+                ft.Container(expand=True), # Spacer 
+                ft.ElevatedButton(
+                    content=ft.Text("Verify Sales Order", weight="bold"), 
+                    bgcolor=ACCENT, 
+                    color=PANEL_LEFT_BG, 
+                    style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=6), padding=15), 
+                    width=float("inf"), 
+                    on_click=verify_order
+                )
             ])
         page.update()
 
-    left_card = ft.Container(expand=1, border=ft.Border(top=ft.BorderSide(1, CARD_BORDER), bottom=ft.BorderSide(1, CARD_BORDER), left=ft.BorderSide(1, CARD_BORDER), right=ft.BorderSide(1, CARD_BORDER)), border_radius=8, padding=24, content=ft.Column(expand=True, spacing=15, controls=[ft.Text("Recent Sales Orders", size=18, weight="bold", color=TEXT_PRIMARY), left_panel_content]))
-    right_card = ft.Container(expand=1, border=ft.Border(top=ft.BorderSide(1, CARD_BORDER), bottom=ft.BorderSide(1, CARD_BORDER), left=ft.BorderSide(1, CARD_BORDER), right=ft.BorderSide(1, CARD_BORDER)), border_radius=8, padding=24, content=right_panel_content)
+    # --- 5. ASSEMBLE MAIN LAYOUT ---
+    left_card = ft.Container(
+        expand=1, 
+        border=ft.Border.all(1, CARD_BORDER), 
+        border_radius=8, 
+        padding=24, 
+        content=ft.Column(expand=True, spacing=15, controls=[
+            ft.Text("Recent Sales Orders", size=18, weight="bold", color=TEXT_PRIMARY), 
+            left_panel_content
+        ])
+    )
+    
+    right_card = ft.Container(
+        expand=1, 
+        border=ft.Border.all(1, CARD_BORDER), 
+        border_radius=8, 
+        padding=24, 
+        content=right_panel_content
+    )
+    
+    # Initialize UI
     refresh_panels()
 
     main_content = ft.Container(
@@ -152,11 +243,16 @@ def DailySales(page: ft.Page, user=None, show_login=None, global_navigate_to=Non
         content=ft.Column(
             expand=True, spacing=25,
             controls=[
-                ft.Column(spacing=4, controls=[ft.Text("Daily Sales Recording", size=28, weight="bold", color=TEXT_PRIMARY), ft.Text("Verify recent sales orders logged by staff.", size=12, color=TEXT_MUTED)]),
+                ft.Column(spacing=4, controls=[
+                    ft.Text("Daily Sales Recording", size=28, weight="bold", color=TEXT_PRIMARY), 
+                    ft.Text("Verify recent sales orders logged by staff.", size=12, color=TEXT_MUTED)
+                ]),
                 stats_row,
-                ft.Row(expand=True, vertical_alignment="start", spacing=20, controls=[left_card, right_card])
+                ft.Row(expand=True, vertical_alignment=ft.CrossAxisAlignment.START, spacing=20, controls=[left_card, right_card])
             ]
         )
     )
+    
     sidebar_container.content = build_sidebar("Daily Sales")
+    
     return ft.Row(expand=True, spacing=0, controls=[sidebar_container, main_content])

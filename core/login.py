@@ -47,6 +47,7 @@ def _left_panel():
 def _right_panel(page: ft.Page, on_login_success=None):
     # Field to accept both username and email
     identifier_field = ft.TextField(
+        value="admin@brewtrack.com",
         hint_text="Email or Username",
         hint_style=ft.TextStyle(color=TEXT_MUTED, size=13),
         bgcolor=INPUT_BG,
@@ -59,6 +60,7 @@ def _right_panel(page: ft.Page, on_login_success=None):
     )
 
     password_field = ft.TextField(
+        value="admin",
         hint_text="••••••••",
         hint_style=ft.TextStyle(color=TEXT_MUTED, size=13),
         password=True,
@@ -160,20 +162,16 @@ def _right_panel(page: ft.Page, on_login_success=None):
                     ],
                 ),
                 ft.Container(height=10),
-                ft.Container(
+                ft.ElevatedButton(
+                    content=ft.Text("Sign In", size=13, weight=ft.FontWeight.BOLD),
                     width=180,
                     height=42,
-                    border_radius=21,
                     bgcolor=ACCENT_DARK,
-                    alignment=ft.Alignment.CENTER,
-                    ink=True,
+                    color=TEXT_PRIMARY,
                     on_click=login_clicked,
-                    content=ft.Text(
-                        "Sign In",
-                        size=13,
-                        weight=ft.FontWeight.BOLD,
-                        color=TEXT_PRIMARY,
-                    ),
+                    style=ft.ButtonStyle(
+                        shape=ft.RoundedRectangleBorder(radius=21),
+                    )
                 ),
             ],
         ),

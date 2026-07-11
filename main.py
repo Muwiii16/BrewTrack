@@ -43,7 +43,7 @@ class BrewTrackApp:
         """The central router. Clears the screen and loads the requested page."""
         self.page.clean()
 
-        if page_name in ["Dashboard", "Low-Stock Items", "Purchase Orders", "Reports"]:
+        if page_name in ["Dashboard", "Purchase Orders", "Reports"]:
             if self.user["role"] == "Staff":
                     from core.staff_dashboard import staff_dashboard_view
                     self.page.add(staff_dashboard_view(self.page, self.user, self.show_login, self.navigate_to))
@@ -67,7 +67,7 @@ class BrewTrackApp:
             else:
                 from core.inventory_monitoring import inventory_monitoring_view
                 self.page.add(inventory_monitoring_view(self.page, self.user, self.show_login, self.navigate_to))
-        elif page_name == "Low-Stock Alerts" or "Low-Stock Items":
+        elif page_name in ["Low-Stock Alerts", "Low-Stock Items"]:
                 if self.user["role"] == "Staff":
                     from core.staff_low_stock import staff_low_stock_alerts_view
                     self.page.add(staff_low_stock_alerts_view(self.page, self.user, self.show_login, self.navigate_to))
