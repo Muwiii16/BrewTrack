@@ -6,7 +6,6 @@ from core.components import _summary_card, _cell, _badge
 from models import inventory_model, purchase_order_model, sales_model, supplier_model, stock_movement_model
 
 def AdminReports(page: ft.Page):
-    # Track the active tab for exporting
     active_tab_ref = ["Inventory"]
 
     # --- 1. FETCH ALL DATA FROM MODELS ---
@@ -83,6 +82,7 @@ def AdminReports(page: ft.Page):
     def _build_labeled_bar_chart(bars_data, title, value_prefix="", value_suffix="", height=140, bar_width=32, default_color=ACCENT, legend=None):
         if not bars_data:
             return ft.Container(
+                key=f"empty_chart_{datetime.now().timestamp()}",
                 padding=20,
                 border=ft.Border(bottom=ft.BorderSide(1, CARD_BORDER)),
                 content=ft.Column(spacing=10, controls=[
@@ -139,6 +139,7 @@ def AdminReports(page: ft.Page):
             header_controls.append(ft.Text(f"Peak: {value_prefix}{max_val:,.2f}{value_suffix}", size=11, color=TEXT_MUTED))
 
         return ft.Container(
+            key=f"chart_{datetime.now().timestamp()}", # Forces Flet to safely redraw the chart dynamically
             padding=20,
             border=ft.Border(bottom=ft.BorderSide(1, CARD_BORDER)),
             content=ft.Column(
@@ -175,71 +176,38 @@ def AdminReports(page: ft.Page):
     # --- 6. REVISED MOVEMENT FILTERS ---
     movement_filters = {"search": "", "category": "All", "supplier": "All"}
 
-    # Build distinct filter lists from the mapped movements
+    # Build distinct filter lists
     distinct_categories = sorted({_movement_category(m) for m in movements})
     distinct_suppliers = sorted({_movement_supplier(m) for m in movements})
 
-    # Create dropdown options
-    category_options = [ft.dropdown.Option("All", "All Categories")] + [
-        ft.dropdown.Option(cat, cat) for cat in distinct_categories
-    ]
-    supplier_options = [ft.dropdown.Option("All", "All Suppliers")] + [
-        ft.dropdown.Option(sup, sup) for sup in distinct_suppliers
-    ]
+    category_options = [ft.dropdown.Option("All", "All Categories")] + [ft.dropdown.Option(cat, cat) for cat in distinct_categories]
+    supplier_options = [ft.dropdown.Option("All", "All Suppliers")] + [ft.dropdown.Option(sup, sup) for sup in distinct_suppliers]
 
-    # Dropdown widgets
-    category_dropdown = ft.Dropdown(
-        value="All",
-        options=category_options,
-        border_color=CARD_BORDER,
-        bgcolor=INPUT_BG,
-        text_style=ft.TextStyle(size=13, color=TEXT_PRIMARY),
-        label="Category",
-        label_style=ft.TextStyle(size=12, color=TEXT_MUTED),
-        content_padding=ft.Padding.symmetric(horizontal=12, vertical=8),
-        width=180,
-        dense=True,
-    )
-    supplier_dropdown = ft.Dropdown(
-        value="All",
-        options=supplier_options,
-        border_color=CARD_BORDER,
-        bgcolor=INPUT_BG,
-        text_style=ft.TextStyle(size=13, color=TEXT_PRIMARY),
-        label="Supplier",
-        label_style=ft.TextStyle(size=12, color=TEXT_MUTED),
-        content_padding=ft.Padding.symmetric(horizontal=12, vertical=8),
-        width=200,
-        dense=True,
-    )
-
-    # Filter matching logic
-    def _movement_matches(mov):
-        if movement_filters["category"] != "All" and _movement_category(mov) != movement_filters["category"]:
-            return False
-        if movement_filters["supplier"] != "All" and _movement_supplier(mov) != movement_filters["supplier"]:
-            return False
-        if movement_filters["search"]:
-            q = movement_filters["search"].strip().lower()
-            if q not in (mov["item_name"] or "").lower():
-                return False
-        return True
-
-    # Event handlers: Safely pull values directly from e.control.value
     def on_category_change(e):
-        movement_filters["category"] = e.control.value
+        movement_filters["category"] = e.control.value if e.control.value else "All"
         refresh_movements_view()
 
     def on_supplier_change(e):
-        movement_filters["supplier"] = e.control.value
+        movement_filters["supplier"] = e.control.value if e.control.value else "All"
         refresh_movements_view()
-
-    category_dropdown.on_change = on_category_change
-    supplier_dropdown.on_change = on_supplier_change
 
     def on_movement_search_change(e):
         movement_filters["search"] = e.control.value or ""
         refresh_movements_view()
+
+    category_dropdown = ft.Dropdown(
+        value="All", options=category_options, on_select=on_category_change,
+        border_color=CARD_BORDER, bgcolor=INPUT_BG, text_style=ft.TextStyle(size=13, color=TEXT_PRIMARY),
+        label="Category", label_style=ft.TextStyle(size=12, color=TEXT_MUTED),
+        content_padding=ft.Padding.symmetric(horizontal=12, vertical=8), width=180, dense=True
+    )
+    
+    supplier_dropdown = ft.Dropdown(
+        value="All", options=supplier_options, on_select=on_supplier_change,
+        border_color=CARD_BORDER, bgcolor=INPUT_BG, text_style=ft.TextStyle(size=13, color=TEXT_PRIMARY),
+        label="Supplier", label_style=ft.TextStyle(size=12, color=TEXT_MUTED),
+        content_padding=ft.Padding.symmetric(horizontal=12, vertical=8), width=200, dense=True
+    )
 
     movement_search_field = ft.TextField(
         hint_text="Search by item name", prefix_icon=ft.Icons.SEARCH, bgcolor=INPUT_BG,
@@ -251,12 +219,20 @@ def AdminReports(page: ft.Page):
     )
 
     movement_filters_row = ft.Row(spacing=12, controls=[
-        movement_search_field,
-        category_dropdown,
-        supplier_dropdown,
+        movement_search_field, category_dropdown, supplier_dropdown
     ])
 
-    # Movements table & chart
+    def _movement_matches(mov):
+        if movement_filters["category"] != "All" and _movement_category(mov) != movement_filters["category"]:
+            return False
+        if movement_filters["supplier"] != "All" and _movement_supplier(mov) != movement_filters["supplier"]:
+            return False
+        if movement_filters["search"]:
+            q = movement_filters["search"].strip().lower()
+            if q not in (mov.get("item_name") or "").lower():
+                return False
+        return True
+
     movements_table = ft.DataTable(expand=True, bgcolor=ft.Colors.TRANSPARENT, border=ft.Border.all(1, CARD_BORDER), border_radius=8, heading_row_color="#1A1A1A",
         columns=[ft.DataColumn(ft.Text(h, size=13, weight="bold", color=TEXT_MUTED)) for h in ["Date", "Item", "Category", "Supplier", "Type", "Qty Changed", "Resulting Stock", "Reference"]],
         rows=[])
@@ -297,15 +273,10 @@ def AdminReports(page: ft.Page):
             )
             movements_table.rows = [build_movement_row(m) for m in filtered]
             
-        # explicitly command Flet to redraw these containers to prevent diff rendering glitches
         if not is_initial:
-            if mov_chart_container.page:
-                mov_chart_container.update()
-            if movements_table.page:
-                movements_table.update()
             page.update()
 
-    refresh_movements_view(is_initial=True)   # initial render safely without page.update()
+    refresh_movements_view(is_initial=True)
 
     # --- 7. CUSTOM TAB SYSTEM ---
     tab_contents = {
