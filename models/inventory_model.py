@@ -12,9 +12,13 @@ from models import stock_movement_model
 
 def get_inventory_overview():
     return run_query(
-        """SELECT s.item_id, s.item_name, sup.supplier_name, i.current_quantity,
+        """SELECT s.item_id, s.item_name, s.category, sup.supplier_id, sup.supplier_name, i.current_quantity,
            s.unit_of_measurement, s.reorder_level, s.cost_per_unit,
-           (i.current_quantity * s.cost_per_unit) AS value
+           (i.current_quantity * s.cost_per_unit) AS value,
+           (SELECT COUNT(DISTINCT po.po_id) 
+            FROM purchase_order_details pod 
+            JOIN purchase_orders po ON po.po_id = pod.po_id 
+            WHERE pod.item_id = s.item_id AND po.po_status = 'Pending') AS pending_po_count
            FROM inventory i
            JOIN ingredients_supplies s ON i.item_id = s.item_id
            LEFT JOIN suppliers sup ON s.supplier_id = sup.supplier_id
@@ -29,12 +33,10 @@ def get_low_stock_items(limit=None):
            FROM inventory i JOIN ingredients_supplies s ON i.item_id = s.item_id
            LEFT JOIN suppliers sup ON s.supplier_id = sup.supplier_id
            WHERE i.current_quantity <= s.reorder_level
-           ORDER BY (i.current_quantity / NULLIF(s.reorder_level, 0)) ASC"""
-    params = ()
+           ORDER BY (i.current_quantity / s.reorder_level) ASC"""
     if limit:
-        q += " LIMIT %s"
-        params = (limit,)
-    return run_query(q, params, fetch=True)
+        q += f" LIMIT {int(limit)}"
+    return run_query(q, fetch=True)
 
 
 def get_low_stock_count():
@@ -74,5 +76,5 @@ def stock_out(item_id, qty, user_id, reference_type=None, reference_id=None, rem
         commit=True,
     )
     resulting_stock = get_current_quantity(item_id)
-    stock_movement_model.log_movement(item_id, user_id, "Stock-Out", -qty, resulting_stock,
+    stock_movement_model.log_movement(item_id, user_id, "Stock-Out", qty, resulting_stock,
                            reference_type, reference_id, remarks)
